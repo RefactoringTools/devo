@@ -7,8 +7,6 @@
 -export([websocket_info/3]).
 -export([websocket_terminate/3]).
 
--compile(export_all).
-
 -record(state, {
                count =1          :: integer(),
                cmd   = undefined :: any(),
@@ -135,14 +133,18 @@ websocket_info(Info, Req, State) ->
 websocket_terminate(_Reason, _Req, _State) ->
 	ok.
 
-
 start_profiling(rq, [Node|_]) ->
     case rpc:call(Node, erlang, system_info, [cpu_topology]) of 
         {badrpc, Reason} ->
             io:format("Devo failed to start profiling for reason:\n~p\n",
-                      [Reason]);
+                           [Reason]);
         Cpu ->
-            self()!{cpu, Cpu},
+            case Cpu of 
+                undefined ->
+                    self()!{cpu, cpu(erlang:system_info(schedulers))};
+                Cpu ->
+                    self()!{cpu, Cpu}
+            end,
             Res=rpc:call(Node, devo_sampling, start,
                          [[run_queues], infinity, none, {devo, node()}]),
             case Res of 
@@ -153,22 +155,32 @@ start_profiling(rq, [Node|_]) ->
             end
     end;
 start_profiling(migration, [Node|_]) ->
-    case rpc:call(Node, erlang, system_info, [cpu_topology]) of 
+    case rpc:call(Node, erlang, system_info, [cpu_topology]) of
         {badrpc, Reason} ->
             io:format("Devo failed to start profiling for reason:\n~p\n",
                       [Reason]);
         Cpu ->
-            self()!{cpu, Cpu},
+            case Cpu of 
+                undefined ->
+                    self()!{cpu, cpu(erlang:system_info(schedulers))};
+                Cpu ->
+                    self()!{cpu, Cpu}
+            end,
             erlang:start_timer(1, self(), <<"Online profiling started...!">>),
             devo_trace:start_trace(migration, Node, {devo, node()})
     end;
 start_profiling(rq_migration, [Node|_]) ->
-    case rpc:call(Node, erlang, system_info, [cpu_topology]) of 
+    case rpc:call(Node, erlang, system_info, [cpu_topology]) of
         {badrpc, Reason} ->
             io:format("Devo failed to start profiling for reason:\n~p\n",
                       [Reason]);
         Cpu ->
-            self()!{cpu, Cpu},
+            case Cpu of 
+                undefined ->
+                    self()!{cpu, cpu(erlang:system_info(schedulers))};
+                Cpu ->
+                    self()!{cpu, Cpu}
+            end,
             erlang:start_timer(1, self(), <<"Online profiling started...!">>),
             Res=rpc:call(Node, devo_sampling, start,
                          [[run_queues], infinity, none,{devo, node()}]),
@@ -280,8 +292,22 @@ grp_tuple({Name, Nodes}) ->
 grp_tuple({Name, _, Nodes}) ->
     {Name, Nodes}.
 
-
 rm_whites(Str) ->
     [C||C<-Str, C=/=$\s, C=/=$\r,  C=/=$\n].
-         
-         
+    
+
+%% fake cpu topology.
+cpu(8)->
+    {cpu,[{processor,[{core,[{thread,{logical,0}},{thread,{logical,1}}]},
+                      {core,[{thread,{logical,2}},{thread,{logical,3}}]},
+                      {core,[{thread,{logical,4}},{thread,{logical,5}}]},
+                      {core,[{thread,{logical,6}},{thread,{logical,7}}]}]}]};
+cpu(4) ->
+    {cpu,[{processor,[{core,[{thread,{logical,0}},{thread,{logical,1}}]},
+                      {core,[{thread,{logical,2}},{thread,{logical,3}}]}]}]};
+cpu(2) ->
+    {cpu,[{processor,[{core,[{thread,{logical,0}},{thread,{logical,1}}]}]}]};
+cpu(_N) ->
+    io:format("Warning: cpu_topology undefined!\n"),
+    undefined.
+    
