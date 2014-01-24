@@ -503,15 +503,36 @@ function parseAddNodes(input) {
 			start = 2;
 		}
 		var nodeName = rawNode.substring(start, finish);
-		var node = new Node(nodeName, rectangle, circle.id);
-		nodes.push(node);
-		node.x = findNodeStartX(node, nodes.length, false);
-		node.y = findNodeStartY(node, nodes.length, false);
-		
-		addNode(node);
 
-		console.log(nodeName, rectangle);
+		var node = findNode(nodeName, nodes);
+		if (node == null) {
+
+			node = new Node(nodeName, rectangle, circle.id);
+			nodes.push(node);
+			node.x = findNodeStartX(node, nodes.length, false);
+			node.y = findNodeStartY(node, nodes.length, false);
+			
+			addNode(node);
+
+		} else {
+			console.log("groupings need to change")
+			node.regionText = node.regionText + circle.id;
+			node.regionText = node.regionText.split("").sort().join("");
+		}
+		console.log(node, nodeName, node.regionText, rectangle);
 	}
+
+	circleType = circleEnum.ADD;
+
+	eulerText = "";
+	for (var i = 0; i < nodes.length; i++){
+		//nodes[i].region = findRectangleFromLabel(nodes[i].regionText);
+		eulerText = eulerText + nodes[i].regionText + " ";
+	}
+
+	console.log(eulerText);
+
+	conn.send(eulerText);
 
 
 }
