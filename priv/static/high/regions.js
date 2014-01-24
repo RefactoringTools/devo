@@ -479,6 +479,7 @@ function parseDeleteSGroup(input){
 	console.log(sGroupName, zones, rectangles, removedCircles, circles);
 
 	//{s_group, CurrentNode, delete_s_group, [Nodes]}
+	redrawVis();
 
 //e.g. {s_group,'node1@127.0.0.1',delete_s_group,[aa]}.
 }
@@ -565,5 +566,23 @@ function parseRemoveNodes(input) {
 
 		console.log(nodeName, nodes, rectangle);
 	}
+
+	redrawVis();
+
+}
+
+function redrawVis() {
+
+	circleType = circleEnum.ADD;
+
+	eulerText = "";
+	for (var i = 0; i < nodes.length; i++){
+		//nodes[i].region = findRectangleFromLabel(nodes[i].regionText);
+		eulerText = eulerText + nodes[i].regionText + " ";
+	}
+
+	console.log(eulerText);
+
+	conn.send(eulerText);
 
 }
