@@ -55,6 +55,7 @@ svg line, svg path {
 }
 
 .nodeArea{
+	display: none;
 	stroke: rgba(255,0,0,0.5);
 	fill: rgba(255,0,0,0.1);
 	stroke-width: 1px;
