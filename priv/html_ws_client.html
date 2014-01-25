@@ -128,7 +128,11 @@
          {
           var fld = document.getElementById('nodeList');
           var values =[];
-          for (var i = 0; i < fld.options.length; i++) {
+          var length=fld.options.length;
+          for (var i = length-1; i >=0; i--) {
+             console.log("i:", i);
+             console.log("length:", length);
+             console.log("options:", fld.options[i].selected);
              if (fld.options[i].selected) {
                fld.remove(i);
              }
@@ -148,7 +152,7 @@
              nodes = nodes + x[i].value + ";";
           };
           };
-         if ((nodes=="") && (newnode.value!="")){
+          if ((nodes=="") && (newnode.value!="")){
               try
                           {
                           // for IE earlier than version 8
@@ -161,6 +165,37 @@
                           
                          }};
         
+        function generateNodeNames(basename, startindex, endindex, domain)
+         {
+          var x=document.getElementById("nodeList");
+          var nodename=document.createElement("nodename");
+          console.log("basename", basename.value);
+          console.log("startindex", startindex.value);
+          console.log("endindex", endindex.value);
+          console.log("domain", domain.value);
+          for (j=startindex.value; j<=endindex.value; j++){
+              nodename.text = "nodename";
+              nodename.value=basename.value+j+domain.value;
+              console.log("nodename:", nodename.value);
+              addNodeToList(nodename);
+             }
+         };
+
+
+      function selectAll(selectBox,selectAll) { 
+    // have we been passed an ID 
+       if (typeof selectBox == "string") { 
+        selectBox = document.getElementById(selectBox);
+      } 
+    // is the select box a multiple select box? 
+      if (selectBox.type == "select-multiple") { 
+        for (var i = 0; i < selectBox.options.length; i++) { 
+             selectBox.options[i].selected = true; 
+        } 
+       }
+      }
+
+
 
       function start_profile(input)
       {
@@ -170,6 +205,7 @@
          if (nodeS=="")
             {
             showScreen('<span style="color: red;">No node has been selected!</span>');
+            disconnect();
             }
          else {
           setTimeout(function(){websocket.send(txt)}, 1000);
@@ -226,7 +262,7 @@
       <div id="status"></div>
     </div>
 
-
+    
     <div id="visualisation">
       <form name="input">
         <p> Please select the feature you would like to visualise:<p>
@@ -236,30 +272,27 @@
           <input type="radio" name="feature" value="inter_node">Inter-node communication <br>
           <input type="radio" name="feature" value="s_group">S_group operations<br>
         <p> Please select the node(s) you would like to monitor:<p>
-           <select id="nodeList"  size=5 style="width: 150px;" multiple>
-        <!--  <option name="node" value="node1@127.0.0.1">node1@127.0.0.1</option>
-           <option name="node" value="node2@127.0.0.1">node2@127.0.0.1</option>
-           <option name="node" value="node3@127.0.0.1">node3@127.0.0.1</option>
-           <option name="node" value="node4@127.0.0.1">node4@127.0.0.1</option> -->
+          <select id="nodeList"  size=5 style="width: 150px;" multiple>
           </select>
           <button type="button" onclick="removeNodeFromList()">Remove Selected Nodes</button> 
           <input type='text' id="newnode" value="node1@127.0.0.1">
-          <button type="button" onclick="addNodeToList(newnode)">Add Node</button> <br><br>
+          <button type="button" onclick="addNodeToList(newnode)">Add Node</button> <br>
+          <input type="button" name="Button" value="Sellect All" onclick="selectAll('nodeList',true)"/>
+          <br><br>
+          <button type="button" onclick = "generateNodeNames(basename, startindex, endindex, domain)">
+            Generate Node Names</button>
+          Basename: <input type='text' id="basename" size=6 value="node">
+          Start index: <input type='text' id="startindex" value="1" size=2>
+          End index: <input type='text' id="endindex" value="1" size=2>
+          Domain: <input type='text' id="domain" value="@127.0.0.1" size=10> <br><br>
           <input type='text' id="server" value="ws://localhost:8080/websocket">
           <button type="button" onclick="toggle_connection(this.form)">Start/Stop Visualization</button>
       </form>
     </div>
-   <!--   <div id="connected">				
-	<p>
-	  <input type='text' id="send_txt" value=></input>
-	  <button type="button" onclick="sendTxt();">send</button>
-	</p>
-      </div> -->
-
-      <div id="content">						
-	<button id="clear" onclick="clearScreen()" >Clear text</button>
-	<div id="output"></div>
-      </div>
+    <div id="content">						
+      <button id="clear" onclick="clearScreen()" >Clear text</button>
+      <div id="output"></div>
+    </div>
 
   <div id="lowLevel">
       <script type="text/javascript" src="static/low/body.js"></script>
