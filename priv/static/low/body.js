@@ -182,7 +182,7 @@ function determineTopology(input) {
 
 	var procTextArr = input.split("processor,[");
 	
-	//console.log(procTextArr);
+	console.log(procTextArr);
 
 	for (var i = 1; i < procTextArr.length; i++){
 		//each processor
@@ -190,30 +190,59 @@ function determineTopology(input) {
 
 		//find all cores
 		var coreTextArr = procTextArr[i].split("core,[");
+		console.log(coreTextArr, coreTextArr.length);
 
-		//console.log("processor "+i, coreTextArr);
+		if (coreTextArr.length != 1) {
+			console.log("processor "+i, coreTextArr);
 
-		for (var j = 1; j < coreTextArr.length; j++){
-			//each core
-			var core = [];
+			for (var j = 1; j < coreTextArr.length; j++){
+				//each core
+				var core = [];
 
-			//find all threads
-			var threadTextArr = coreTextArr[j].split("logical,");
+				//find all threads
+				var threadTextArr = coreTextArr[j].split("logical,");
+
+				console.log("core "+i, threadTextArr);
+
+				for (var k = 1; k < threadTextArr.length; k++){
+					//each thread
+
+					var thread = parseInt(threadTextArr[k].substring(0,1));
+
+					console.log("processor "+i, "core "+j, "thread "+thread);
+					core.push(thread);
+					ordering.push(thread);
+				}
+				processor.push(core);
+			}
+			groupings.push(processor);
+		} else {
+			console.log("other format");
 
 			
 
-			for (var k = 1; k < threadTextArr.length; k++){
+			coreTextArr = procTextArr[i].split("{core,{logical,");
+			console.log(coreTextArr, coreTextArr.length);
+
+			for (var j = 1; j < coreTextArr.length; j++){
 				//each thread
 
-				var thread = parseInt(threadTextArr[k].substring(0,1));
+				var core = [];
 
-				console.log("processor "+i, "core "+j, "thread "+thread);
+				var thread = parseInt(coreTextArr[j]);
+
+				console.log("processor "+i, "core 0", "thread "+thread);
 				core.push(thread);
 				ordering.push(thread);
-			}
-			processor.push(core);
+				processor.push(core);
+				
+				console.log(core);
+			}			
+			console.log(processor);
+			groupings.push(processor);
 		}
-		groupings.push(processor);
+
+		
 	}
 	console.log(groupings);
 	nodeGroupings = groupings;
