@@ -77,7 +77,8 @@ trace_parser({trace, From, send, Msg, To}, {Node,Receiver}) ->
     FromNode = get_node_name(From),
     ToNode = get_node_name(To),
     case FromNode/=node() andalso ToNode/=node() 
-        andalso FromNode/=ToNode of 
+        andalso FromNode/=ToNode andalso 
+        From/=nonode andalso To/=nonode of 
         true ->
             MsgSize = byte_size(term_to_binary(Msg)),
             Receiver!{trace_inter_node, FromNode,ToNode, MsgSize},
@@ -89,7 +90,8 @@ trace_parser({trace_ts, From, send, Msg, To, _TS}, {Node,Receiver}) ->
     FromNode = get_node_name(From),
     ToNode = get_node_name(To),
     case FromNode/=node() andalso ToNode/=node() 
-        andalso FromNode/=ToNode of 
+        andalso FromNode/=ToNode andalso 
+        From/=nonode andalso To/=nonode of 
         true ->
             MsgSize = byte_size(term_to_binary(Msg)),
             Receiver!{trace_inter_node, FromNode,ToNode, MsgSize},
