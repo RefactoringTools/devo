@@ -199,6 +199,8 @@ function drawEdges(edges){
 	var svg = d3.select("svg");
 	svg.selectAll("line").remove();
 
+
+
 	svg.selectAll("line")
 		.data(edges)
 		.enter()
@@ -222,6 +224,13 @@ function drawEdges(edges){
 			return "rgb(" + size + "," + size + "," + size + ")";
 		})
 		.style("stroke-width", 2)
+		.style("opacity", function(d){
+			if (d.target == null || d.source == null) {
+				return "0";
+			} else {
+				return "1";
+			}
+		})
 		.attr("id", function(d){
 			return "edge" + d.source.label + d.target.label;
 		});
