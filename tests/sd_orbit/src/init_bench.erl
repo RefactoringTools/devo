@@ -12,7 +12,7 @@
 main() ->
     application:set_env(kernel, s_groups, []),
     G=fun bench:g12345/1, 
-    N= 10000, %% 100000%% calculates Orbit for 0..N
+    N= 40000, %% 100000%% calculates Orbit for 0..N
     P= 40, %% Naumber of worker processes on each node
     G_size=4, %% Number of nodes in each s_group
     Nodes=config:get_key(nodes), %% Loads list of node names from config file
@@ -28,7 +28,7 @@ main() ->
 	end,    
 	bench:dist(G,N,P,Nodes,NumberOfGroups),
     LapsedUs = timer:now_diff(now(), Start),
-  %%  [rpc:call(Node, erlang, halt, [])||Node<-(Nodes--[node()])],
+    [rpc:call(Node, erlang, halt, [])||Node<-(Nodes--[node()])],
     io:format("N:~p  ---- Num process: ~p  --- Num Nodes: ~p  ---- Group size: ~p \n",[N, P, length(Nodes), Group_size]),
     io:format("Elapsed time in total (microseconds): ~p \n",[LapsedUs]). %microseconds
 
@@ -53,5 +53,3 @@ main(Nodes) ->
     LapsedUs = timer:now_diff(now(), Start),
     io:format("N:~p  ---- Num process: ~p  --- Num Nodes: ~p  ---- Group size: ~p \n",[N, P, length(Nodes), Group_size]),
     io:format("Elapsed time in total (microseconds): ~p \n",[LapsedUs]). %microseconds
-
-
