@@ -82,7 +82,7 @@ websocket_info({timeout, _Ref, _Msg}, Req, State) ->
     erlang:start_timer(200, self(), <<"timeout">>),
     {reply, {text, list_to_binary(rm_whites(StateStr))}, Req, 
      State#state{count=Cnt+1, data=[]}};
-websocket_info({trace_inter_node, From, To, MsgSize}, Req, State=#state{data=_Data}) when 
+websocket_info({trace_inter_node, From, To, _MsgSize}, Req, State=#state{data=_Data}) when 
         From ==nonode orelse To==nonode->
     {ok, Req, State};
 websocket_info({trace_inter_node, From, To, MsgSize}, Req, State=#state{data=Data}) ->
