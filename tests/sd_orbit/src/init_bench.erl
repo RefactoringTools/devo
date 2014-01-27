@@ -28,7 +28,7 @@ main() ->
 	end,    
 	bench:dist(G,N,P,Nodes,NumberOfGroups),
     LapsedUs = timer:now_diff(now(), Start),
-    [rpc:call(Node, erlang, halt, [])||Node<-(Nodes--[node()])],
+  %%  [rpc:call(Node, erlang, halt, [])||Node<-(Nodes--[node()])],
     io:format("N:~p  ---- Num process: ~p  --- Num Nodes: ~p  ---- Group size: ~p \n",[N, P, length(Nodes), Group_size]),
     io:format("Elapsed time in total (microseconds): ~p \n",[LapsedUs]). %microseconds
 

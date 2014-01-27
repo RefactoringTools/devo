@@ -38,46 +38,46 @@ init(Gs, Xs, P, Timeout, Spawn, Credit, MasterID, GroupName)->
 		ProcessTabSize=GroupSize div (length(Hosts)*P), %% find table size for each process
 		WorkerTabSize2= GroupSize-(ProcessTabSize*length(Hosts)*P), %% find additional table size for the last worker node
 		ProcessTabSize2=WorkerTabSize2 div P, %% find additional table size for the last node processes
-		ProcessTabSize3=GroupSize-(ProcessTabSize*length(Hosts)*P)-(ProcessTabSize2*P), %% find additional table size for the last process on the last node
-		Temp_Worker_Hash_Table=make_workers_hash_table(Hosts, P, ProcessTabSize),
-		Temp_Worker_Hash_Table2=change_list(Temp_Worker_Hash_Table,P*(length(Hosts)-1)+1, P*length(Hosts)-1, 2, ProcessTabSize+ProcessTabSize2), %% increase the size of table for all processes on the last node		
-		Worker_Hash_Table=change_list(Temp_Worker_Hash_Table2,P*length(Hosts), P*length(Hosts), 2, ProcessTabSize+ProcessTabSize2+ProcessTabSize3), %% increase the size of table for the last processes on the last node	
-		{Workers, _GlobTabSize}=start_workers(Worker_Hash_Table,{[],GroupStart}),
+          ProcessTabSize3=GroupSize-(ProcessTabSize*length(Hosts)*P)-(ProcessTabSize2*P), %% find additional table size for the last process on the last node
+          Temp_Worker_Hash_Table=make_workers_hash_table(Hosts, P, ProcessTabSize),
+          Temp_Worker_Hash_Table2=change_list(Temp_Worker_Hash_Table,P*(length(Hosts)-1)+1, P*length(Hosts)-1, 2, ProcessTabSize+ProcessTabSize2), %% increase the size of table for all processes on the last node		
+          Worker_Hash_Table=change_list(Temp_Worker_Hash_Table2,P*length(Hosts), P*length(Hosts), 2, ProcessTabSize+ProcessTabSize2+ProcessTabSize3), %% increase the size of table for the last processes on the last node	
+          {Workers, _GlobTabSize}=start_workers(Worker_Hash_Table,{[],GroupStart}),
 
-		[{_, _, LastGroupStart, LastGroupSize}|_Tail] = Group_Hash_Table,
+          [{_, _, LastGroupStart, LastGroupSize}|_Tail] = Group_Hash_Table,
+          
+          [{_, FirstWorkerStart,_}|_Tail2]=lists:reverse(Workers),
+          [{_, LastWorkerStart,LastWorkerSize}|_Tail3]=Workers,
+          
+          case GroupStart of
+              FirstWorkerStart ->
+                  ok;
+              _ -> throw(group_start_and_first_process_start_not_equal)
+          end,
 
-		[{_, FirstWorkerStart,_}|_Tail2]=lists:reverse(Workers),
-		[{_, LastWorkerStart,LastWorkerSize}|_Tail3]=Workers,
-
-		case GroupStart of
-		     FirstWorkerStart ->
-		        ok;
-		     _ -> throw(group_start_and_first_process_start_not_equal)
-		end,
-
-		EndOfWorkersInGroup=LastWorkerStart+LastWorkerSize,
-		case GroupStart+GroupSize of
-		     EndOfWorkersInGroup ->
-		        ok;
-		     _ ->throw(group_is_not_divided_properly)
-		end,
-
-		StaticMachConf={Gs,self(),Gateway,Workers,LastGroupStart+LastGroupSize,Timeout,Spawn}, %% contains the process hash table for this s_group
-		lists:foreach(fun({Pid,_,_}) -> Pid ! {init, StaticMachConf } end, Workers), %% process hash table is sent to all worker processes
-		Gateway! {hash_table, StaticMachConf }, %% process hash table is sent to the gateway processes
-		case Xs of
-			[] -> ok;
-			_ ->  
-				% distribute initial vertices to workers
-				worker:distribute_vertices(StaticMachConf, Credit, Xs)
-		end
+          EndOfWorkersInGroup=LastWorkerStart+LastWorkerSize,
+          case GroupStart+GroupSize of
+              EndOfWorkersInGroup ->
+                  ok;
+              _ ->throw(group_is_not_divided_properly)
+          end,
+          
+          StaticMachConf={Gs,self(),Gateway,Workers,LastGroupStart+LastGroupSize,Timeout,Spawn}, %% contains the process hash table for this s_group
+          lists:foreach(fun({Pid,_,_}) -> Pid ! {init, StaticMachConf } end, Workers), %% process hash table is sent to all worker processes
+          Gateway! {hash_table, StaticMachConf }, %% process hash table is sent to the gateway processes
+          case Xs of
+              [] -> ok;
+              _ ->  
+                                                % distribute initial vertices to workers
+                  worker:distribute_vertices(StaticMachConf, Credit, Xs)
+          end
   end,
-
-  collect_credit(MasterID),
-  % ask from all Workers to dump their tables
+    
+    collect_credit(MasterID),
+    % ask from all Workers to dump their tables
     lists:foreach(fun({Pid, _, _}) -> Pid ! {dump} end, Workers),
-    collect_orbit(MasterID,length(Workers)),
-    s_group:delete_s_group(GroupName).
+    collect_orbit(MasterID,length(Workers)).
+%% s_group:delete_s_group(GroupName).
 
 %% update elements of a list from (From) to (To) with value (Value)
 change_list(Worker_Hash_Table, From, To, Element, Value) ->
