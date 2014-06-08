@@ -29,7 +29,7 @@ class HVWebSocket implements MessageComponentInterface {
         //$input = $_GET["input"];
 
         //$output = array();
-        exec("java -jar ..\iCircles.jar \"" . $msg . "\"", $output);
+        exec("java -jar ..\/iCircles.jar \"" . $msg . "\"", $output);
 
         $resultText = "";
         foreach ($output as $result){
