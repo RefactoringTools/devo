@@ -38,7 +38,7 @@ websocket_handle({text, Msg}, Req, State) ->
     MsgStr=binary_to_list(Msg),
     case MsgStr of
         ("EULERTEXT"++EulerText) ->
-            JavaResult = os:cmd("java -jar ws/iCircles.jar \"" ++ EulerText ++ "\""),
+            JavaResult = os:cmd("java -jar priv/iCircles.jar \"" ++ EulerText ++ "\""),
             {reply, {text,JavaResult}, Req, State};
         _ -> 
             case string:tokens(MsgStr, ":") of 
