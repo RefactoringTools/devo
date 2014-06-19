@@ -75,41 +75,39 @@
       
       function toggle_connection(input){
           if(websocket.readyState == websocket.OPEN){
-             if (profile_on==1) {
-                    profile_on=0;
-                    disconnect();}
-               else 
-                {
-				start_profile(input);
+            if (profile_on==1) {
+                  profile_on=0;
+                  disconnect();
+                  }
+            else {
+				          start_profile(input);
                   //start();
-				  console.log("before display check", high);
+				          console.log("before display check", high);
                   if (high) {
                     $("#highLevel").show();
                   } else {
                     $("#lowLevel").show();
                   }
-                 
-                 profile_on=1;
+                  profile_on=1;
                 }
-      } else {
-              connect();
-              start_profile(input);
-              profile_on=1
-              };
+          } else {
+            connect();
+            start_profile(input);
+            profile_on=1
+          };
       };
 
       function findFeatureSelection(feature){
-      var test = document.getElementsByName(feature);
-      var sizes = test.length;
-      for (i=0; i < sizes; i++) {
-                    if (test[i].checked==true) {
-						
-                      high = !(i < 3); //sets which vis type to use
-					  console.log("vis check:", i, high);
+          var test = document.getElementsByName(feature);
+          var sizes = test.length;
+          for (i=0; i < sizes; i++) {
+                  if (test[i].checked==true) {
+                    high = !(i < 3); //sets which vis type to use
+					          console.log("vis check:", i, high);
                     return test[i].value;
-                    };
-                    };
-                    };    
+                  };
+              };
+          };    
         
       function findNodeSelection()
        {
