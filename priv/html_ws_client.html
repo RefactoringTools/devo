@@ -75,41 +75,39 @@
       
       function toggle_connection(input){
           if(websocket.readyState == websocket.OPEN){
-             if (profile_on==1) {
-                    profile_on=0;
-                    disconnect();}
-               else 
-                {
-				start_profile(input);
+            if (profile_on==1) {
+                  profile_on=0;
+                  disconnect();
+                  }
+            else {
+				          start_profile(input);
                   //start();
-				  console.log("before display check", high);
+				          console.log("before display check", high);
                   if (high) {
                     $("#highLevel").show();
                   } else {
                     $("#lowLevel").show();
                   }
-                 
-                 profile_on=1;
+                  profile_on=1;
                 }
-      } else {
-              connect();
-              start_profile(input);
-              profile_on=1
-              };
+          } else {
+            connect();
+            start_profile(input);
+            profile_on=1
+          };
       };
 
       function findFeatureSelection(feature){
-      var test = document.getElementsByName(feature);
-      var sizes = test.length;
-      for (i=0; i < sizes; i++) {
-                    if (test[i].checked==true) {
-						
-                      high = !(i < 3); //sets which vis type to use
-					  console.log("vis check:", i, high);
+          var test = document.getElementsByName(feature);
+          var sizes = test.length;
+          for (i=0; i < sizes; i++) {
+                  if (test[i].checked==true) {
+                    high = !(i < 3); //sets which vis type to use
+					          console.log("vis check:", i, high);
                     return test[i].value;
-                    };
-                    };
-                    };    
+                  };
+              };
+          };    
         
       function findNodeSelection()
        {
@@ -277,7 +275,7 @@
           <button type="button" onclick="removeNodeFromList()">Remove Selected Nodes</button> 
           <input type='text' id="newnode" value="node1@127.0.0.1">
           <button type="button" onclick="addNodeToList(newnode)">Add Node</button> <br>
-          <input type="button" name="Button" value="Sellect All" onclick="selectAll('nodeList',true)"/>
+          <input type="button" name="Button" value="Select All" onclick="selectAll('nodeList',true)"/>
           <br><br>
           <button type="button" onclick = "generateNodeNames(basename, startindex, endindex, domain)">
             Generate Node Names</button>

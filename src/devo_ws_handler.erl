@@ -36,25 +36,31 @@ websocket_handle({text, <<"start">>}, Req, State) ->
     {ok, Req, State};
 websocket_handle({text, Msg}, Req, State) ->
     MsgStr=binary_to_list(Msg),
-    case string:tokens(MsgStr, ":") of 
-        ["start_profile","message_queue_len", NodeStr] ->
-            Nodes= string:tokens(NodeStr, ";"),
-            Ns = [list_to_atom(N)||N<-Nodes],
-            Cmd=message_queue_len,
-            %% Hardcoded process name, will be removed.
-            start_profiling(Cmd, {sd_orbit, Ns}),
-            NewState=State#state{cmd=Cmd, nodes=Ns},
-            {ok, Req, NewState};
-        ["start_profile",Feature, NodeStr] ->
-            Nodes= string:tokens(NodeStr, ";"),
-            Ns = [list_to_atom(N)||N<-Nodes],
-            Cmd = list_to_atom(Feature),
-            start_profiling(Cmd, Ns),
-            NewState=State#state{cmd=Cmd, nodes=Ns},
-            {ok, Req, NewState};
-        _ ->
-            Msg = "Unexpected message from client:"++ binary_to_list(Msg),
-            {reply, {text,list_to_binary(Msg)}, State}
+    case MsgStr of
+        ("EULERTEXT"++EulerText) ->
+            JavaResult = os:cmd("java -jar priv/iCircles.jar \"" ++ EulerText ++ "\""),
+            {reply, {text,JavaResult}, Req, State};
+        _ -> 
+            case string:tokens(MsgStr, ":") of 
+                ["start_profile","message_queue_len", NodeStr] ->
+                    Nodes= string:tokens(NodeStr, ";"),
+                    Ns = [list_to_atom(N)||N<-Nodes],
+                    Cmd=message_queue_len,
+                    %% Hardcoded process name, will be removed.
+                    start_profiling(Cmd, {sd_orbit, Ns}),
+                    NewState=State#state{cmd=Cmd, nodes=Ns},
+                    {ok, Req, NewState};
+                ["start_profile",Feature, NodeStr] ->
+                    Nodes= string:tokens(NodeStr, ";"),
+                    Ns = [list_to_atom(N)||N<-Nodes],
+                    Cmd = list_to_atom(Feature),
+                    start_profiling(Cmd, Ns),
+                    NewState=State#state{cmd=Cmd, nodes=Ns},
+                    {ok, Req, NewState};
+                _ ->
+                    Msg = "Unexpected message from client:"++ binary_to_list(Msg),
+                    {reply, {text,list_to_binary(Msg)}, State}
+            end
     end;
 websocket_handle(_Data, Req, State) ->
     {ok, Req, State}.
@@ -277,7 +283,7 @@ stop_profiling(undefined,_) ->
     ok;
 stop_profiling(Cmd, _Nodes) ->
     io:format("stop_profiling: unnexpected command:~p\n", [Cmd]),
-    ok. 
+    ok.
 
 get_init_s_group_config(Node) ->
     case rpc:call(Node, application, get_env, [kernel, s_groups]) of
@@ -286,6 +292,7 @@ get_init_s_group_config(Node) ->
         undefined ->
             {ok, []};
         {ok, NodeGrps} ->
+            io:fwrite("~w~n", [NodeGrps]),
             Grps = [grp_tuple(NodeGrp)||NodeGrp<-NodeGrps],
             {ok,Grps}
     end.
