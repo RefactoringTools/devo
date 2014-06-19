@@ -19,7 +19,7 @@ var interval; //holds force tick
 var svg;
 var times = [];
 
-var conn = new WebSocket('ws://localhost:8081');
+var conn = new WebSocket('ws://localhost:8080/websocket');
 //var conn = new WebSocket('ws://cs.kent.ac.uk/~rb440/:8081');
 conn.onopen = function(e) {
     console.log("Connection established!");
@@ -246,8 +246,8 @@ function parseHighTopology(input) {
 		}
 
 		console.log(eulerText);
-
-		conn.send(eulerText);
+		var msgPrefix = "EULERTEXT";
+		conn.send(msgPrefix + eulerText);
 	}
 
 
@@ -329,8 +329,8 @@ function parseAddSGroup(input) {
 	}
 
 	console.log(eulerText);
-
-	conn.send(eulerText);
+	var msgPrefix = "EULERTEXT";
+	conn.send(msgPrefix + eulerText);
 
 	//recalculate circles
 	//recalculate zones
