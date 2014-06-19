@@ -246,7 +246,7 @@ function parseHighTopology(input) {
 		}
 
 		console.log(eulerText);
-		var msgPrefix = "EULERTEXT";
+		var msgPrefix = "EULERTEXT:";
 		conn.send(msgPrefix + eulerText);
 	}
 
