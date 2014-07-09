@@ -40,14 +40,6 @@ websocket_handle({text, Msg}, Req, State) ->
         ["EULERTEXT",EulerText] ->
             JavaResult = os:cmd("java -jar priv/iCircles.jar \"" ++ EulerText ++ "\""),
             {reply, {text,JavaResult}, Req, State};
-        ["start_profile","message_queue_len", NodeStr] ->
-            Nodes= string:tokens(NodeStr, ";"),
-            Ns = [list_to_atom(N)||N<-Nodes],
-            Cmd=message_queue_len,
-            %% Hardcoded process name, will be removed.
-            profiling:start_profiling(Cmd, {sd_orbit, Ns}, self()),
-            NewState=State#state{cmd=Cmd, nodes=Ns},
-            {ok, Req, NewState};
         ["start_profile",Feature, NodeStr] ->
             Nodes= string:tokens(NodeStr, ";"),
             Ns = [list_to_atom(N)||N<-Nodes],

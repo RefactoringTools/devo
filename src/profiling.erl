@@ -45,15 +45,6 @@ start_profiling(rq_migration, [Node|_],Pid) ->
                     devo_trace:start_trace(migration, Node, {devo, node()})
             end
     end;
-start_profiling(message_queue_len, {RegName, [Node|_]}, _Pid) ->
-    Res=rpc:call(Node, devo_sampling, start,
-                 [[{message_queue_len, RegName}], infinity, none,{devo, node()}]),
-    case Res of 
-        {badrpc, Reason} ->
-            io:format("Devo failed to start profiling for reason:\n~p\n",
-                      [Reason]);
-        _ -> Res
-    end;
 start_profiling(inter_node, Nodes=[N|_Ns], Pid) ->
     case get_init_s_group_config(N) of 
         {badrpc, Reason} ->
