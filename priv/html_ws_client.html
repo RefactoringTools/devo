@@ -74,27 +74,35 @@
 
       
       function toggle_connection(input){
-          if(websocket.readyState == websocket.OPEN){
-            if (profile_on==1) {
+          if (profile_on==1) {
                   profile_on=0;
+                  wipe_graphs();
                   disconnect();
-                  }
-            else {
-				          start_profile(input);
-                  //start();
-				          console.log("before display check", high);
-                  if (high) {
-                    $("#highLevel").show();
-                  } else {
-                    $("#lowLevel").show();
-                  }
-                  profile_on=1;
-                }
+                  return;
+          }
+          if(websocket.readyState == websocket.OPEN){
+             start_profile(input);
+             console.log("before display check", high);
+             profile_on=1;
           } else {
             connect();
             start_profile(input);
             profile_on=1
-          };
+          }
+          if (high) {
+            $("#highLevel").show();
+          } else {
+            $("#lowLevel").show();
+          }
+      };
+      
+      function wipe_graphs() {
+         console.log("Wiping graphs");
+         if (high) {
+            $("#highLevel").hide();
+         } else {
+            $("#lowLevel").hide();
+         }
       };
 
       function findFeatureSelection(feature){
@@ -234,7 +242,7 @@
 
       function onMessage(evt) { 
          // showScreen('<span style="color: blue;">' + evt.data+ '</span>'); 
-         console.log(evt.data);
+         //console.log(evt.data);
        if (high){
 		 parseInput(evt.data);
        } else {
@@ -244,7 +252,7 @@
       };  
 
       function showScreen(txt) { 
-          $('#output').prepend('<p>' + txt + '</p>');
+          $('#connection_status').html('<p>' + txt + '</p>');
       };
 
       function clearScreen() 
@@ -290,6 +298,7 @@
     <div id="content">						
       <button id="clear" onclick="clearScreen()" >Clear text</button>
       <div id="output"></div>
+      <div id="connection_status"></div>
     </div>
 
   <div id="lowLevel">
