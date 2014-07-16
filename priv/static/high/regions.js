@@ -22,7 +22,7 @@ var times = [];
 var conn = new WebSocket('ws://localhost:8080/websocket');
 //var conn = new WebSocket('ws://cs.kent.ac.uk/~rb440/:8081');
 conn.onopen = function(e) {
-    console.log("Connection established!");
+    console.log("Connection established in high/regions.js!");
 };
 
 conn.onmessage = function(e) {
@@ -149,7 +149,7 @@ function parseComms(commsFile){
 }
 
 function parseCircles(input){
-	console.log(input);
+	console.log("Input to parseCircles" + input);
 	var circleFile = input.split("\n");
 	//use 1 as first row of input are labels
 	for (var i = 1; i < circleFile.length-1; i++){
