@@ -130,7 +130,7 @@ get_init_s_group_config(Node) ->
         undefined ->
             {ok, []};
         {ok, NodeGrps} ->
-            io:fwrite("~w~n", [NodeGrps]),
+            %io:fwrite("NODEGROUPS: ~w~n", [NodeGrps]),
             Grps = [grp_tuple(NodeGrp)||NodeGrp<-NodeGrps],
             {ok,Grps}
     end.
