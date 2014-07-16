@@ -60,7 +60,8 @@
       {
           wsHost = $("#server").val()
           websocket = new WebSocket(wsHost);
-          showScreen('<b>Connecting to: ' +  wsHost + '</b>'); 
+          $("#hostId").append(wsHost);
+          //showScreen('<b>Connecting to: ' +  wsHost + '</b>'); 
           websocket.onopen = function(evt) { onOpen(evt) }; 
           websocket.onclose = function(evt) { onClose(evt) }; 
           websocket.onmessage = function(evt) { onMessage(evt) }; 
@@ -242,7 +243,7 @@
 
       function onMessage(evt) { 
          // showScreen('<span style="color: blue;">' + evt.data+ '</span>'); 
-         //console.log(evt.data);
+       console.log("Data revieved by onMessage in html_ws_client");
        if (high){
 		 parseInput(evt.data);
        } else {
@@ -297,6 +298,9 @@
     </div>
     <div id="content">						
       <button id="clear" onclick="clearScreen()" >Clear text</button>
+      <div id=hostId>
+	Host: 
+      </div>
       <div id="output"></div>
       <div id="connection_status"></div>
     </div>
