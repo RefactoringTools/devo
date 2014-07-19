@@ -197,6 +197,12 @@ function parseCircles(input){
 
 }
 
+function profilingStopped(){
+    nodes = [];
+    circles = [];
+    rectangles = [];
+}
+
 
 function parseHighTopology(input) {
 

@@ -60,7 +60,10 @@
       {
           wsHost = $("#server").val()
           websocket = new WebSocket(wsHost);
-          $("#hostId").append(wsHost);
+          var hId = $("#hostId").html().indexOf(wsHost);
+          if ($("#hostId").html().indexOf(wsHost) === -1){
+             $("#hostId").append(wsHost);
+          }
           //showScreen('<b>Connecting to: ' +  wsHost + '</b>'); 
           websocket.onopen = function(evt) { onOpen(evt) }; 
           websocket.onclose = function(evt) { onClose(evt) }; 
@@ -101,6 +104,8 @@
          console.log("Wiping graphs");
          if (high) {
             $("#highLevel").hide();
+            $("#highLevel").html('');
+            profilingStopped();
          } else {
             $("#lowLevel").hide();
          }
