@@ -1,6 +1,10 @@
 var svg;
 var duration = 1000;
 
+function drawForceGraph(nodes){
+    
+}
+
 function drawGraph(nodes, edges, rectangles, circles){
 	$("#highLevel").show();
 

@@ -37,7 +37,19 @@ function Node(label,region, regionText){
 	vertical = 0;
 	newNode = false;
 }
+function Node2(name, s_group){
+    this.name = name;
+    this.groups = [s_group.name];
+    s_group.addNode(this);
+    this.addToGroup = function (group) {this.groups.push(group.name); group.addNode(this);};
+    this.isInGroup = function (g) {return $.inArray(g, this.groups) > -1;};
+}
 
+function S_group(name) {
+    this.name = name;
+    this.nodes= [];
+    this.addNode = function (node){this.nodes.push(node);};
+}
 function Edge(source, target, size){
 	this.source = source;
 	this.target = target;

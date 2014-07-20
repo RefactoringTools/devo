@@ -2,6 +2,7 @@ var circles = [];
 var nodes = [];
 var edges = [];
 var zones = [];
+var groups = [];
 var multiplier = 3;
 var c = 20;
 var t = 200;
@@ -52,52 +53,14 @@ function stopForce() {
 	clearInterval(interval);
 }
 
-
-/*
-function animate(){
-	var m = 0;
-	var changeValue = 100;
-	$("#time").html(times[currentTime].time+" ms");
-	var interval = setInterval(
-		function() {
-			m++;
-			//console.log("m", m, "currentTime", currentTime);
-			if (m % changeValue == changeValue-1) {
-				currentTime++;
-				$("#time").html(times[currentTime].time+" ms");
-				if (currentTime == times.length){
-					window.clearInterval(interval);
-					console.log("done");
-					return;
-				}
-				drawEdges(times[currentTime].interactions);
-			}
-			next();
-		}
-	,10);
-}*/
-
 function applyForceModel(){
 
 }
 
 function parseComms(commsFile){
 
-	//var timeInstance = commsFile.split(",!");
-	//var timeInstance = commsFile.split(",\n"); //replace when actually running from live stream data
-	//var timeInt = parseInt(interactions[0].substring(1));
-
-//{200,[{{node1@127.0.0.1,node2@127.0.0.1},1,240},{{node4@127.0.0.1,node3@127.0.0.1},3,152},{{node2@127.0.0.1,node4@127.0.0.1},22,46589}]}.
-
-
 	var timeInstance = commsFile;
 					
-	//console.log(input[0], times);	
-	//for (var i = 0; i < input.length; i++){
-	//for (var i = 0; i < 2; i++){
-	//	var timeInstance = input[i];
-
-	//	var interactions = timeInstance.split(",\n"); //replace when actually running from live stream data
 		var interactions = timeInstance.split("{{");
 		
 		var timeInt = "";
@@ -201,10 +164,63 @@ function profilingStopped(){
     nodes = [];
     circles = [];
     rectangles = [];
+    groups = [];
+}
+
+function parseHighTopology(input) {
+    var grpArrStr = input.replace(/\s+/, "").replace("{s_group_init_config,","").slice(0,-1);
+    var groups = parseGroupStr(grpArrStr);
+}
+
+function parseGroupStr(str){
+    // Get rid of outer braces
+    var groupStrings = str.replace('[{', '').slice(0,-1);
+    while(!(groupStrings === "")){
+	var s_groupNameArr = getGroupName(groupStrings);
+	groupStrings = s_groupNameArr[0];
+	var s_group = new S_group(s_groupNameArr[1]);
+	groupStrings = parseNodes(groupStrings, s_group);
+    }
+}
+
+function parseNodes(str, s_group){
+    var endingBraceLoc = str.indexOf(']');
+    var groups = str.substr(0,endingBraceLoc).slice(1).split(',');
+    var nodeNames = [];
+    groups.forEach(function(s) {nodeNames.push(s.slice(1,-1));});
+    nodeNames.forEach(function(name) {createNode(name,s_group);});
+    // The plus four removes the ']},{' before the next group name
+    return str.slice(endingBraceLoc+4);
+}
+
+function createNode(name,s_group) {
+    var node = getNode(name);
+    if(node === null){
+	node = new Node2(name,s_group);
+	nodes.push(node);
+    } else {
+	if (!node.isInGroup(s_group)){
+	    node.addToGroup(s_group);
+	}
+    }    
+}
+
+function getNode(name){
+    var res = null;
+    nodes.forEach(function (n) {if (n.name === name){res = n;}});
+    return res;
+}
+
+function getGroupName(str){
+    var nextComma = str.indexOf(',');
+    var groupName = str.substr(0,nextComma);
+    // Cuts off the group name as well as the comma before the list of node names
+    str = str.slice(nextComma+1);
+    return [str,groupName];
 }
 
 
-function parseHighTopology(input) {
+/*function parseHighTopology(input) {
 
 	if (input == "{s_group_init_config, []}") {
 		//no initial configuration
@@ -257,7 +273,7 @@ function parseHighTopology(input) {
 	}
 
 
-}
+}*/
 
 function parseInput(input){
 
