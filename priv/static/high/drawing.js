@@ -10,7 +10,7 @@ function drawForceGraph(ns,es){
        .links(es)
        .size([width,height])
        .linkDistance([100])
-       .charge([-120])
+       .charge([-1000])
        .start();
     svg = d3.select("#highLevel").append("svg")
 	    .attr("width",width)

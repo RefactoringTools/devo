@@ -54,7 +54,6 @@ function stopForce() {
 }
 
 function parseComms(commsFile){
-
 	var timeInstance = commsFile;	
 		var interactions = timeInstance.split("{{");
 		
