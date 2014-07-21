@@ -1,8 +1,87 @@
 var svg;
 var duration = 1000;
+var colors = d3.scale.category10();
+var groupMap = new Array();
+var colorIterator = 0;
+var gradientIdIterator = 0;
+function drawForceGraph(ns,es){
+    var force = d3.layout.force()
+       .nodes(ns)
+       .links(es)
+       .size([width,height])
+       .linkDistance([100])
+       .charge([-120])
+       .start();
+    svg = d3.select("#highLevel").append("svg")
+	    .attr("width",width)
+	    .attr("height",height);
+    var edges = svg.selectAll("line")
+       .data(es)
+       .enter()
+       .append("line")
+       .style("stroke","#ccc")
+       .style("stroke-width",5);
+    var nodes = svg.selectAll("circle")
+       .data(ns)
+       .enter()
+       .append("circle")
+       .attr("r",15)
+       .style("fill", fillCircle)
+       .call(force.drag);
+    nodes.append("title").text(function(d){ return d.name;});
+    force.on("tick", function(){
+      edges.attr("x1", function(d) { return d.source.x; })
+           .attr("y1", function(d) { return d.source.y; })
+           .attr("x2", function(d) { return d.target.x; })
+           .attr("y2", function(d) { return d.target.y; });
 
-function drawForceGraph(nodes){
-    
+      nodes.attr("cx", function(d) { return d.x; })
+           .attr("cy", function(d) { return d.y; });
+      });
+}
+
+function fillCircle(d, index){
+    var groups = d.groups;
+    if (groups.length === 1) {
+	return getGroupColor(groups[0]);
+    } else {
+	var gradientId = "gradient" + gradientIdIterator;
+	gradientIdIterator++;
+	var gradient = svg.append("svg:defs").append("svg:linearGradient").attr("id",gradientId);
+	var step = Math.floor(100/(groups.length-1));
+	var gradRange = _.range(0,100,step);
+        gradRange.push(100);
+	var percents = new Array();
+	for(var i = 0;i < gradRange.length; i++){
+	    var xArg = "x" + (i+1);
+	    var yArg = "y" + (i+1);
+	    var percent = gradRange[i] + "%";
+	    percents[i] = percent;
+	    gradient.attr(xArg,percent).attr(yArg,percent);
+	}
+	gradient.attr("spreadMethod","pad");
+	for(i = 0;i <percents.length;i++){
+	    var color = getGroupColor(groups[i]);
+	     gradient.append("svg:stop")
+		     .attr("offset",percents[i])
+		     .attr("stop-color",color)
+	             .attr("stop-opacity",1);
+	}
+	return "url(#" + gradientId + ")";
+    }
+}
+
+function getGroupColor(group){
+    var groupName = group.name;
+    var color;
+    if(!(groupName in groupMap)){
+	groupMap[groupName] = colorIterator;
+	color = colors(colorIterator);
+	colorIterator++;
+    } else {
+	color = colors(groupMap[groupName]);
+    }
+    return color;
 }
 
 function drawGraph(nodes, edges, rectangles, circles){
@@ -188,7 +267,7 @@ function findNodeStartY(d, i, multiplierSet){
 
 	var i = nodesInRegion(d.region).indexOf(d);
 
-	var cy = ((Math.floor(i / cols)+1) * (d.region.height / (cols + 1))) + d.region.y
+	var cy = ((Math.floor(i / cols)+1) * (d.region.height / (cols + 1))) + d.region.y;
 
 	if (multiplierSet){
 		d.y = cy* multiplier;
@@ -200,44 +279,7 @@ function findNodeStartY(d, i, multiplierSet){
 
 function drawEdges(edges){
 
-	var svg = d3.select("svg");
-	svg.selectAll("line").remove();
 
-
-
-	svg.selectAll("line")
-		.data(edges)
-		.enter()
-		.append("line")
-		.attr("x1", function(d){
-			console.log(d);
-			return d3.select("#"+d.source.label).attr("cx");
-		})
-		.attr("y1", function(d){
-			return d3.select("#"+d.source.label).attr("cy");
-		})
-		.attr("x2", function(d){
-			return d3.select("#"+d.target.label).attr("cx");
-		})
-		.attr("y2", function(d){
-			return d3.select("#"+d.target.label).attr("cy");
-		})
-		.style("stroke", function (d){
-			//console.log(d.size);
-			var size = Math.max(200-(d.size * 10),0);
-			return "rgb(" + size + "," + size + "," + size + ")";
-		})
-		.style("stroke-width", 2)
-		.style("opacity", function(d){
-			if (d.target == null || d.source == null) {
-				return "0";
-			} else {
-				return "1";
-			}
-		})
-		.attr("id", function(d){
-			return "edge" + d.source.label + d.target.label;
-		});
 }
 
 function moveCircle(circleObj, newX, newY, newR) {
