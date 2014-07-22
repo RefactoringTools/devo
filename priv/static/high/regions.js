@@ -20,21 +20,6 @@ var interval; //holds force tick
 var svg;
 var times = [];
 
-var conn = new WebSocket('ws://localhost:8080/websocket');
-//var conn = new WebSocket('ws://cs.kent.ac.uk/~rb440/:8081');
-conn.onopen = function(e) {
-    console.log("Connection established in high/regions.js!");
-};
-
-conn.onmessage = function(e) {
-	if (circleType == circleEnum.TOPOLOGY){
-		parseCircles(e.data);
-	} else if (circleType == circleEnum.ADD) {
-		parseAddSGroupResponse(e.data);
-	}
-    
-};
-
 
 function next(){
 	iterateGraph(nodes, edges);
@@ -70,88 +55,40 @@ function parseComms(commsFile){
 		//console.log(time, interactions);
 
 		times.push(time);
-
+    
 		for (var j = 1; j < interactions.length; j++){
 			var interactionDetails = interactions[j].split(",");
 
-			//console.log(interactionDetails);
+			var start = interactionDetails[0].trim().replace(/[{}']/g,'');
 
-			var startAt = interactionDetails[0].indexOf("@");
-			//var startVal = j == 1 ? 3 : 2;
-			var start = interactionDetails[0].trim().substring(1,startAt);
-
-			var finishAt = interactionDetails[1].indexOf("@");
-			var finish = interactionDetails[1].trim().substring(1,finishAt);
+			var finish = interactionDetails[1].trim().replace(/[{}']/g,'');
 
 
 			var count = parseInt(interactionDetails[2]);
 
-			//console.log(time);
+
 
 			var startNode = findNode(start, nodes);
 			var finishNode = findNode(finish, nodes);
-			//console.log(startNode, start, nodes);
-			var edge = new Edge(startNode, finishNode, count);
+		        addCountToEdge(startNode, finishNode,count);
 
-			time.interactions.push( edge );
-			console.log(start, startNode, finish, finishNode, count);
-			//console.log(start, finish, count);
+
 		}
-		edges = time.interactions;
-//	}
-	//iterateGraph(nodes, time.interactions);
-	drawEdges(time.interactions);
-	//console.log(nodes, time.interactions);
+    if(interactions.length > 1)
+	{
+                drawEdges(edges);
+	} else {
+	    resetEdgeColor();
+	}
 
 }
 
-function parseCircles(input){
-	console.log("Input to parseCircles" + input);
-	var circleFile = input.split("\n");
-	//use 1 as first row of input are labels
-	for (var i = 1; i < circleFile.length-1; i++){
-		var result = circleFile[i].split(",");
-		//console.log(result);
-
-		var c = findCircleId(result[0].trim());
-		console.log(c);
-		if (c.newCircle){
-			c.r = parseInt(result[3]);
-			c.x = parseInt(result[1]);
-			c.y = parseInt(result[2]);
-			c.newCircle = false;
-		}
-		else {
-			console.log("duplicate needed");
-
-			var c2 = new Circle(result[0].trim(), c.label, parseInt(result[3]), parseInt(result[1]), parseInt(result[2]));
-			c2.newCircle = false;
-			circles.push(c2);
-
-		}
-
-		
-		//var c = new Circle(result[0].trim(), , parseInt(result[1]), parseInt(result[2]));
-		//circles.push(c);	
+function addCountToEdge(start, finish, count) {
+    edges.forEach(function (e){
+	if(e.source === start && e.target === finish) {
+	    e.size = count;
 	}
-
-	console.log(circles);
-
-	zones = eulerText.split(" ");
-	zones.pop();
-	console.log(zones);
-	zones = removeDuplicates(zones);
-	console.log(zones);
-
-	rectangles = findZoneRectangles(zones, circles);
-
-	for (var i = 0; i < nodes.length; i++) {
-		var n = nodes[i];
-		n.region = findRectangleFromLabel(n.regionText, rectangles);
-	}
-
-	drawGraph(nodes, null, rectangles, circles);
-
+    });
 }
 
 function profilingStopped(){
@@ -164,7 +101,7 @@ function profilingStopped(){
 function parseHighTopology(input) {
     var grpArrStr = input.replace(/\s+/, "").replace("{s_group_init_config,","").slice(0,-1);
     parseGroupStr(grpArrStr);
-    var edges = generateEdges();
+    edges = generateEdges();
     drawForceGraph(nodes,edges);
 }
 

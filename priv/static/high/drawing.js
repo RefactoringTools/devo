@@ -4,6 +4,7 @@ var colors = d3.scale.category10();
 var groupMap = new Array();
 var colorIterator = 0;
 var gradientIdIterator = 0;
+
 function drawForceGraph(ns,es){
     var force = d3.layout.force()
        .nodes(ns)
@@ -20,12 +21,14 @@ function drawForceGraph(ns,es){
        .enter()
        .append("line")
        .style("stroke","#ccc")
-       .style("stroke-width",5);
+       .style("stroke-width",6)
+       .attr("source", function(e){return e.source.name;})
+       .attr("target", function(e){return e.target.name;});
     var nodes = svg.selectAll("circle")
        .data(ns)
        .enter()
        .append("circle")
-       .attr("r",15)
+       .attr("r",20)
        .style("fill", fillCircle)
        .call(force.drag);
     nodes.append("title").text(function(d){ return d.name;});
@@ -84,147 +87,41 @@ function getGroupColor(group){
     return color;
 }
 
-function drawGraph(nodes, edges, rectangles, circles){
-	$("#highLevel").show();
-
-	console.log(nodes, edges, rectangles, circles);
-
-	svg = d3.select("#highLevel").append("svg")
-	    .attr("width", width)
-	    .attr("height", height)
-	    .attr("version", 1.1)
-	    .attr("id","highLevelSvg")
-	    .attr("xmlns", "http://www.w3.org/2000/svg");
-
-	svg.append("text")
-		.attr("id", "time")
-		.attr("x", 10)
-		.attr("y", 20)
-		.attr("width", 50)
-		.attr("height", 20);
-
-
-
-	svg.append("g");
-	for (var i = 0; i < circles.length; i++) {
-		circle = circles[i];
-
-
-		svg.select("g")
-			.append("circle")
-			.attr("r", function(){
-				circle.r = circle.r * multiplier;
-				return circle.r
-			})
-			.attr("cx",function(){
-				circle.x = circle.x * multiplier;
-				return circle.x
-			})
-			.attr("cy",function(){
-				circle.y = circle.y * multiplier;
-				return circle.y
-			})
-			.attr("class","euler")
-			.attr("id", function(d){
-				circle.svg = d3.select(this);
-				return "circle"+circle.id;
-			})
-			.attr("style","fill: none; stroke:blue;");
-
-		//console.log(circle.svg.attr("cx"));
-
-		svg.select("g")
-			.append("text")
-			.text(function(){
-				circle.labelSvg = d3.select(this);
-				return circle.label;
-			})
-			.attr("x", function(){
-				return circle.x;
-			})
-			.attr("y", function(){
-				return (circle.y - circle.r)+25 ;
-			})
-			.attr("width", 20)
-			.attr("height", 20)
-			.attr("style", "font-weight:bold; font-size:1.5em; font-family:sans-serif;")
-			.attr("id","label"+circle.id);
-
+function drawEdges(edges){
+    var countMax = 0;
+    var countMin = Math.pow(2,32) - 1;
+    var svgEdges = [];
+    for(var i = 0; i < edges.length; i++){
+	var currEdge = edges[i];
+	var size = currEdge.size;
+	svgEdges[i] = getSvgEdge(currEdge);
+	if(size > countMax){
+	    countMax =size;
+	} else if (size < countMin){
+	    countMin = size;
 	}
-
-	drawRectangles(true);
-
-	k = c * Math.sqrt(800 / nodes.length);
-	//console.log(k,c, nodes.length);
-
-	
-
-	svg.selectAll("circle")
-		.data(nodes, function(d){
-			return d;
-		})
-		.enter()
-		.append("circle")
-		.attr("r",5)
-		.attr("cx",function (d,i){
-			
-			//var cols = Math.round(Math.sqrt(nodesInRegion(d.region).length));
-
-			//console.log(cols, d.label);
-			//console.log((i % cols)+1, i, cols, nodes.length, d.region.width, (d.region.width / (cols + 1)));
-			//var cx = ( ((i % cols)+1) * (d.region.width / (cols + 1)) ) + d.region.x;
-			 //var cx = (Math.random() * d.region.width) + d.region.x;
-			//d.x = cx* multiplier;
-			//console.log("x", d);
-			return findNodeStartX(d, i, true);
-
-			//return d.region.width * multiplier;
-			//return 10;
-		})
-		.attr("cy",function (d){
-			//console.log("y", d.region.y * multiplier);
-			//d.y = d.region.y;
-
-			//var cols = Math.round(Math.sqrt(nodesInRegion(d.region).length));
-
-			//var cy = d.region.y + ((Math.floor(i / cols)+1) * (d.region.height / (cols + 1)));
-			//console.log(cy, d.region.height, d.region.y, Math.floor(i / cols)+1 , (d.region.height / (cols + 1)));
-
-			//var i = nodesInRegion(d.region).indexOf(d);
-
-			/*
-			console.log(
-				d.region.y,
-				"i", i,
-				"cols", cols,
-				i % cols,
-				(Math.floor(i / cols)+1),
-				(d.region.height / (cols + 1)),
-				((Math.floor(i % cols)+1) * (d.region.height / (cols + 1)))
-			);
-*/
-			//var cy = ((Math.floor(i / cols)+1) * (d.region.height / (cols + 1))) + d.region.y
-
-			//var cy = (Math.random() * d.region.height) + d.region.y;
-			//var cy = d.region.y + 50;
-			//d.y = cy* multiplier;
-			//return parseInt(d.y);
-			//return 10;
-			return findNodeStartY(d, i, true);
-		})
-		.attr("id", function(d){
-			return d.label;
-		})
-		.attr("class","node")
-
-		.style("fill", "blue")
-		.append("svg:title")
-        .text(function(d) {
-                return d.label;
-        });
-	
+    }
+    var denom = countMax - countMin;
+    for(i = 0; i < edges.length;i++){
+	currEdge = edges[i];
+	var svgEdge = svgEdges[i];
+	var percentOfMax = ((currEdge.size - countMin) / denom).toFixed(2);
+	var hueDeg = (1 - percentOfMax) * 120;
+	var color = d3.hsl(hueDeg,1,.5).toString();
+	d3.select(svgEdge).style("stroke",color);
+    }
 }
 
+function getSvgEdge(edge){
+    var sourceName = edge.source.name;
+    var targetName = edge.target.name;
+    var svgElements = svg.select('[source="'+ sourceName+'"][target="'+targetName+'"]')[0];
+    return svgElements[0];
+}
+
+function resetEdgeColor(){
+    svg.selectAll("line").style("stroke","#ccc");
+}
 function drawRectangles(multiplierSet){
 
 	d3.selectAll("rect").remove();
@@ -277,10 +174,7 @@ function findNodeStartY(d, i, multiplierSet){
 	return parseInt(d.y);
 }
 
-function drawEdges(edges){
 
-
-}
 
 function moveCircle(circleObj, newX, newY, newR) {
 

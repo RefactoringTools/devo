@@ -1,4 +1,3 @@
-
 /** A labelled circle */
 function Circle(id,label,r,x,y) {
 	this.id = id;
@@ -188,7 +187,7 @@ Finds a node given a label
 function findNode(label, nodes){
 	for (var i = 0; i < nodes.length; i++){
 		//console.log(nodes[i].label,label, nodes[i].label == label);
-		if (nodes[i].label == label) {
+		if (nodes[i].name == label) {
 			return nodes[i];
 		}
 	} 
