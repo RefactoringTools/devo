@@ -4,9 +4,10 @@ var colors = d3.scale.category10();
 var groupMap = new Array();
 var colorIterator = 0;
 var gradientIdIterator = 0;
+var force;
 
 function drawForceGraph(ns,es){
-    var force = d3.layout.force()
+    force = d3.layout.force()
        .nodes(ns)
        .links(es)
        .size([width,height])
@@ -24,6 +25,7 @@ function drawForceGraph(ns,es){
        .style("stroke-width",6)
        .attr("source", function(e){return e.source.name;})
        .attr("target", function(e){return e.target.name;});
+    edges.append("title").text("Total messages= 0, total size = 0");
     var nodes = svg.selectAll("circle")
        .data(ns)
        .enter()
@@ -43,7 +45,11 @@ function drawForceGraph(ns,es){
       });
 }
 
-function fillCircle(d, index){
+function edgeTitle(e){
+    return "Total messages = " + e.totalCount + ", total size = " + e.totalSize;
+}
+
+function fillCircle(d){
     var groups = d.groups;
     if (groups.length === 1) {
 	return getGroupColor(groups[0]);
@@ -73,6 +79,16 @@ function fillCircle(d, index){
 	return "url(#" + gradientId + ")";
     }
 }
+
+function recolorNodes(nodes){
+    for(var i = 0; i < nodes.length; i++){
+	var node = nodes[i];
+	var fillString = fillCircle(node);
+	var svgNode = getSvgNode(node);
+	d3.select(svgNode).style("fill", fillString);
+    }
+}
+
 
 function getGroupColor(group){
     var groupName = group.name;
@@ -109,6 +125,19 @@ function drawEdges(edges){
 	var hueDeg = (1 - percentOfMax) * 120;
 	var color = d3.hsl(hueDeg,1,.5).toString();
 	d3.select(svgEdge).style("stroke",color);
+	$(svgEdge).children("title").text(edgeTitle(currEdge));
+    }
+}
+
+function getSvgNode(node){
+    var circles = d3.selectAll("circle")[0];
+    for(var i = 0; i < circles.length; i++){
+	var circle = circles[i];
+	var text = $(circle).children("title");
+	text = text.text();
+	if(text === node.name){
+	    return circle;
+	}
     }
 }
 
@@ -172,98 +201,6 @@ function findNodeStartY(d, i, multiplierSet){
 		d.y = cy;
 	}
 	return parseInt(d.y);
-}
-
-
-
-function moveCircle(circleObj, newX, newY, newR) {
-
-	//var circleObj = findCircleId(id);
-	var id = circleObj.id;
-	var circleSvg = circleObj.svg;//d3.select("#circle"+id);
-
-	var origX = circleSvg.attr("cx");
-	var origY = circleSvg.attr("cy");
-	var origR = circleSvg.attr("r");
-
-	//move circle
-	circleSvg.transition()
-		.attr("cx", newX)
-		.attr("cy", newY)
-		.attr("r", newR)
-		.duration(duration);
-
-	circleObj.x = newX;
-	circleObj.y = newY;
-	circleObj.r = newR;
-
-//move circle label
-	circleObj.labelSvg.transition()
-		.attr("x", function(){
-			return circleObj.x;
-		})
-		.attr("y", function(){
-			return (circleObj.y - circleObj.r)+25 ;
-		})
-		.duration(duration);
-
-//redraw rectangles
-	//rectangles = [];
-	//rectangles = findZoneRectangles(zones, circles);
-	console.log(rectangles);
-
-	for (var i = 0; i < nodes.length; i++) {
-		var n = nodes[i];
-		n.region = findRectangleFromLabel(n.regionText, rectangles);
-	}
-
-	drawRectangles(false);
-
-//move nodes
-	for (var i = 0; i < nodes.length; i++){
-		var node = nodes[i];
-		//console.log(node.regionText, id, )
-		if (node.regionText.indexOf(id) != -1){
-			//move node
-			node.x = findNodeStartX(node, i, false);
-			node.y = findNodeStartY(node, i, false);
-
-			d3.select("#"+node.label)
-				.transition()
-				.attr("cx", node.x)
-				.attr("cy", node.y)
-				.duration(duration);
-
-			for (var j = 0; j < edges.length; j++){
-				var edge = edges[j];
-
-				if (edge.source == node){
-					d3.select("#edge"+edge.source.label+edge.target.label)
-						.transition()
-						.attr("x1", node.x)
-						.attr("y1", node.y)
-						.duration(duration);
-
-					//alter source
-				}
-
-				if (edge.target == node) {
-					d3.select("#edge"+edge.source.label+edge.target.label)
-						.transition()
-						.attr("x2", node.x)
-						.attr("y2", node.y)
-						.duration(duration);
-
-					//alter target
-				}
-
-			}
-		}
-	}
-
-	//console.log(edges);
-	//drawEdges(edges);
-
 }
 
 //adds an sgroup to the drawing based on the circle id;
@@ -389,33 +326,24 @@ function addNode(node) {
 
 }
 
-function removeNode(node) {
-	console.log("removing node", node);
-
-	var nodeSvg = d3.select("svg").select("#"+node.label);
-
-	nodeSvg.style("fill", "red")
-		.transition()
-		.attr("r", parseInt(nodeSvg.attr("r")) * 4)
-		.duration(3*duration/4);
-
-	nodeSvg.transition()
-		.delay(3*duration/4)
-		.attr("r", 0)
-		.duration(duration/4)
-		.remove();
-
-	//remove edges
-	for (var i = 0; i < edges.length; i++){
-		var edge = edges[i];
-		//if edge is connected to this node, remove edge
-		if (edge.source == node || edge.target == node) {
-			edges.splice(i, 1);
-			i--;
-			d3.select("#edge"+edge.source.label+edge.target.label)
-				.remove();
-		}
+function removeNodes(nodes) {
+    var allNodes = svg.selectAll("circle")[0];
+    for(var i = 0; i < nodes.length; i++){
+	for (var j = 0;j <  allNodes.length; j++){
+	    var n = nodes[i];
+	    var svgN = allNodes[j];
+	    var title = $(svgN).children("title").text();
+	    if(title === n.name){
+		svgN.remove();
+		removeEdges(n);
+		break;
+	    }
 	}
+    }
+    force.start();
+}
 
-	
+function removeEdges(node){
+    svg.selectAll('line[source="'+node.name+'"]').remove();
+    svg.selectAll('line[target="'+node.name+'"]').remove();
 }

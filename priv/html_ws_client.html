@@ -225,18 +225,6 @@
           setTimeout(function(){websocket.send(txt)}, 1000);
           }
       };
-           
-        
-      
-      function sendTxt() {
-          if(websocket.readyState == websocket.OPEN){
-              txt = $("#send_txt").val();
-              websocket.send(txt);
-              showScreen('sending: ' + txt); 
-          } else {
-               showScreen('websocket is not connected'); 
-          };
-      };
 
       function onOpen(evt) { 
           showScreen('<span style="color: green;">Connected ...</span>'); 

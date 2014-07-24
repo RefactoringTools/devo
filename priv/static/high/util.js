@@ -54,13 +54,31 @@ function S_group(name) {
 	return n1Member && n2Member;
     };
 }
-function Edge(source, target, size){
-	this.source = source;
-	this.target = target;
+function Edge(node1, node2, size){
+        this.source = node1;
+        this.target = node2;
 	this.size = size;
+        this.totalCount = 0;
+        this.totalSize = 0;
 }
 
+function lookupEdge(node1, node2, edges){
+    for(var i = 0; i < edges.length;i++){
+	var e = edges[i];
+	if (isNodeEdge(node1,node2, e)){
+	    return e;
+	}
+    }
+    return -1;
+}
 
+function isNodeEdge(node1,node2,edge){
+    return edgeContainsNode(node1,edge) && edgeContainsNode(node2,edge);
+}
+
+function edgeContainsNode(node,edge){
+   return edge.source === node || edge.target === node;
+}
 function Time(time){
 	this.time = time;
 	this.interactions = [];

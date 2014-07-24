@@ -43,17 +43,10 @@ function parseComms(commsFile){
 		var interactions = timeInstance.split("{{");
 		
 		var timeInt = "";
-		//if (i == 0) {
-			timeInt = parseInt(interactions[0].substring(1));
-		//} else {
-		//	timeInt = parseInt(interactions[0].substring(2));
-		//}
 
 		var time = new Time(timeInt);
 		time.interactions = [];
 		d3.select("#time").text(timeInt+" ms");
-		//console.log(time, interactions);
-
 		times.push(time);
     
 		for (var j = 1; j < interactions.length; j++){
@@ -63,32 +56,30 @@ function parseComms(commsFile){
 
 			var finish = interactionDetails[1].trim().replace(/[{}']/g,'');
 
-
 			var count = parseInt(interactionDetails[2]);
 
-
-
+		        var size = parseInt(interactionDetails[3]);
 			var startNode = findNode(start, nodes);
 			var finishNode = findNode(finish, nodes);
-		        addCountToEdge(startNode, finishNode,count);
+		        addCountToEdge(startNode, finishNode,count,size);
+		    
 
 
 		}
     if(interactions.length > 1)
 	{
-                drawEdges(edges);
+            drawEdges(edges);
 	} else {
 	    resetEdgeColor();
 	}
 
 }
 
-function addCountToEdge(start, finish, count) {
-    edges.forEach(function (e){
-	if(e.source === start && e.target === finish) {
-	    e.size = count;
-	}
-    });
+function addCountToEdge(start, finish, count,size) {
+    var e = lookupEdge(start,finish,edges);
+    e.size = count;
+    e.totalCount += count;
+    e.totalSize += size;
 }
 
 function profilingStopped(){
@@ -208,210 +199,46 @@ function parseInput(input){
 }
 
 function parseAddSGroup(input) {
-	//{s_group,'node1@127.0.0.1',new_s_group,[{aa, ['node1@127.0.0.1','node2@127.0.0.1']}]}.
+	//"{s_group,'node1@127.0.0.1',new_s_group,[group1,['node1@127.0.0.1','node2@127.0.0.1']]}."
 
 	var grpDetails = input.split(",");
 
 	var sgroupName = grpDetails[3].substring(1);
 	console.log(sgroupName, grpDetails);
 
-	//var id = String.fromCharCode(circles.length + 65);
-	var id = findNextCircleKey(circles);
-
-	var circle = new Circle(id, sgroupName, -1, -1, -1);
-	circle.newCircle = true;
-	circles.push(circle);
-
-	for (var j = 4; j < grpDetails.length; j++) {
-		console.log(grpDetails[j]);
-		var rawName = grpDetails[j];
-		var at = rawName.indexOf("@");
-		
-		var start = j == 4 ? 2 : 1;
-		var nodeName = rawName.substring(start, at);
-		console.log(j, "nodeName", nodeName);
-
-		var node = findNode(nodeName, nodes);
-
-		if (node == null){
-			node = new Node(nodeName, null, id);
-			node.newNode = true;
-			nodes.push(node);
-		} else {
-			node.regionText = node.regionText + id;
-		}
-
-		//if node = null, create new node
-
-		//change node RegionText
-		//change node region
-
-
-		console.log(nodeName, node);
-	}
-
-	circleType = circleEnum.ADD;
-
-	eulerText = "";
-	for (var i = 0; i < nodes.length; i++){
-		//nodes[i].region = findRectangleFromLabel(nodes[i].regionText);
-		eulerText = eulerText + nodes[i].regionText + " ";
-	}
-
-	console.log(eulerText);
-	var msgPrefix = "EULERTEXT";
-	conn.send(msgPrefix + eulerText);
-
-	//recalculate circles
-	//recalculate zones
-
-}
-
-function parseAddSGroupResponse(input) {
-
-	console.log(input);
-
-	var circleFile = input.split("\n");
-	
-	//use 1 as first row of input are labels
-	for (var i = 1; i < circleFile.length-1; i++){
-		var result = circleFile[i].split(",");
-		//console.log(result);
-
-		var c = findCircleIdHaventMoved(result[0].trim(), circles);
-		console.log("moving circle", circles.indexOf(c));
-		console.log("before", c);
-		if (c == null) {
-
-		} else {
-			
-			c.r = parseInt(result[3]) * multiplier;
-			c.x = parseInt(result[1]) * multiplier;
-			c.y = parseInt(result[2]) * multiplier;
-			c.moved = true;
-		}
-		console.log("after", c);
-		//var c = new Circle(result[0].trim(), , parseInt(result[1]), parseInt(result[2]));
-		
-			
-		//console.log(c);
-
-	}
-
-	console.log(circles);
-
-	zones = eulerText.split(" ");
-	zones.pop();
-	console.log(zones);
-	zones = removeDuplicates(zones);
-	rectangles = findZoneRectangles(zones, circles);
-
-	for (var i = 0; i < nodes.length; i++) {
-		var n = nodes[i];
-		console.log(n, n.region);
-		n.region = findRectangleFromLabel(n.regionText, rectangles);
-		if (n.newNode) {
-			console.log("need to draw Node: ", n);
-			n.x = findNodeStartX(n, nodes.length, false);
-			n.y = findNodeStartY(n, nodes.length, false);
-			addNode(n);
-			n.newNode = false;
-		}
-	}
-
-	for (var j = 0; j < circles.length; j++){
-		var c = circles[j];
-		c.moved = false;
-		console.log("newcheck", j, c.newCircle);
-		if (c.newCircle){
-			c.newCircle = false;
-			addSGroup(c);
-		} else {
-			console.log("moving SVG circle", c, j, c.r, c.x, c.y);
-			moveCircle(c, c.x, c.y, c.r);
-		}
-	}
-
-	
 
 }
 
 function parseDeleteSGroup(input){
-
-	var sGroupName = input.split(",")[3];
-	sGroupName = sGroupName.substring(1,sGroupName.length-3);
-	//var removedCircles = [];
-	var id = "";
-	//remove circle from list
-	var removedCircles = findAllCirclesLabel(sGroupName, circles);
-	for (var i = 0; i < removedCircles.length; i++) {
-		var circleIndex = circles.indexOf(removedCircles[i]);
-		id = removedCircles[i].id;
-		//console.log(circles[0], circles[1], circles[2], circleIndex, circle);
-		if (circleIndex != -1) {
-			circles.splice(circleIndex, 1);
-		}
-		//console.log(circles[0], circles[1], circles[2]);
-		console.log(sGroupName, removedCircles[i].id);
+    
+        // "{s_group,'node1@127.0.0.1',delete_s_group,[group1]}."
+    var sGroupName = input.split(",")[3];
+    sGroupName = sGroupName.substring(1,sGroupName.length-3);
+    var group = groups.filter(function (e){return (e.name === sGroupName);})[0];
+    var singleGroupNodes = group.nodes;
+    var nodesForRecolor = [];
+    for (var i = 0 ;i<singleGroupNodes.length;i++){
+	var temp = singleGroupNodes[i];
+	if(temp.groups.length > 1){
+	    removeElement(group,temp.groups);
+	    removeElement(temp,singleGroupNodes);
+	    nodesForRecolor.push(temp);
 	}
 	
-	console.log(id, rectangles);
-	var validRectangles = findAllRectanglesFromLabel(id, rectangles);
+    }
+    removeNodes(singleGroupNodes);
+    recolorNodes(nodesForRecolor);
+}
 
-	//console.log(rectangle);
-
-	zones = [];
-	//remove this sgroup from nodes
-	for (var i = 0; i < nodes.length; i++){
-		var node = nodes[i];
-		console.log(i, node, node.region, node.regionText);
-		//this node is only in deleted group, so remove node
-		if (validRectangles.indexOf(node.region) != -1) {
-			//remove node
-			removeNode(node); //removes node from svg
-			nodes.splice(i, 1);
-			i--;
-			console.log("removed node", node);
-			
-		} else {
-			//remove this region from node's regionText
-			var index = node.regionText.indexOf(id);
-			//console.log(node.regionText, index, node.regionText.substring(0,index), node.regionText.substring(index+1));
-			var newRegionText = node.regionText.substring(0,index) + node.regionText.substring(index+1);
-			node.regionText = newRegionText;
-
-			//build zones, if this region isn't already there
-			if (zones.indexOf(newRegionText) == -1 && newRegionText != "") {
-				zones.push(newRegionText);
-			}
-			console.log(node.regionText);
-		}
-
+function removeElement(elem, arr){
+    var index;
+    for(var i = 0; i<arr.length;i++){
+	var temp = arr[i];
+	if (temp === elem){
+	    index = i;
 	}
-	//console.log(zones, circles);
-	//rebuild rectangles
-	zones = removeDuplicates(zones);
-	rectangles = findZoneRectangles(zones, circles);
-	
-	//console.log (nodes);
-	//assign node correct new region
-	for (var i = 0; i < nodes.length; i++){
-		var node = nodes[i];
-		node.region = findRectangleFromLabel(node.regionText, rectangles);
-	}
-	
-	for (var i = 0; i < removedCircles.length; i++){
-		deleteSGroup(removedCircles[i]);
-	}
-
-	//remove svg of circle
-
-	console.log(sGroupName, zones, rectangles, removedCircles, circles);
-
-	//{s_group, CurrentNode, delete_s_group, [Nodes]}
-	redrawVis();
-
-//e.g. {s_group,'node1@127.0.0.1',delete_s_group,[aa]}.
+    }
+    return arr.splice(index,1);
 }
 
 function parseAddNodes(input) {
@@ -446,7 +273,7 @@ function parseAddNodes(input) {
 			addNode(node);
 
 		} else {
-			console.log("groupings need to change")
+			console.log("groupings need to change");
 			node.regionText = node.regionText + circle.id;
 			node.regionText = node.regionText.split("").sort().join("");
 		}
