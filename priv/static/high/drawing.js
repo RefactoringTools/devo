@@ -5,20 +5,30 @@ var groupMap = new Array();
 var colorIterator = 0;
 var gradientIdIterator = 0;
 var force;
+var d3Nodes;
+var d3Edges;
 
 function drawForceGraph(ns,es){
     force = d3.layout.force()
-       .nodes(ns)
-       .links(es)
        .size([width,height])
        .linkDistance([100])
-       .charge([-1000])
-       .start();
+       .charge([-1000]);
     svg = d3.select("#highLevel").append("svg")
 	    .attr("width",width)
 	    .attr("height",height);
+    d3Nodes = ns;
+    d3Edges = es;
+    refreshForceGraph();
+}
+
+function refreshForceGraph(){
+    $("svg").empty();
+    force = force
+	.nodes(d3Nodes)
+	.links(d3Edges)
+	.start();
     var edges = svg.selectAll("line")
-       .data(es)
+       .data(d3Edges)
        .enter()
        .append("line")
        .style("stroke","#ccc")
@@ -27,7 +37,7 @@ function drawForceGraph(ns,es){
        .attr("target", function(e){return e.target.name;});
     edges.append("title").text("Total messages= 0, total size = 0");
     var nodes = svg.selectAll("circle")
-       .data(ns)
+       .data(d3Nodes)
        .enter()
        .append("circle")
        .attr("r",20)
@@ -43,6 +53,7 @@ function drawForceGraph(ns,es){
       nodes.attr("cx", function(d) { return d.x; })
            .attr("cy", function(d) { return d.y; });
       });
+    
 }
 
 function edgeTitle(e){
@@ -151,24 +162,13 @@ function getSvgEdge(edge){
 function resetEdgeColor(){
     svg.selectAll("line").style("stroke","#ccc");
 }
-function drawRectangles(multiplierSet){
 
-	d3.selectAll("rect").remove();
-	console.log(rectangles);
-	for (var i = 0; i < rectangles.length; i++) {
-	//context.fillRect(rectangles[i].x * multiplier, rectangles[i].y * multiplier, rectangles[i].width * multiplier, rectangles[i].height * multiplier);
-	//console.log(svg);
-	d3.select("svg").select("g")
-		.append("rect")
-		.attr("x", multiplierSet ? rectangles[i].x * multiplier : rectangles[i].x)
-	    .attr("y", multiplierSet ? rectangles[i].y * multiplier : rectangles[i].y)
-	    .attr("width", multiplierSet ? rectangles[i].width * multiplier : rectangles[i].width)
-	    .attr("height", multiplierSet ? rectangles[i].height * multiplier : rectangles[i].height)
-	    .attr("class","startingRect")
-	    .attr("style", "fill: rgba(0, 255, 0, 0.5)");
-}
-}
 
+function addNodes(ns,es){
+    d3Nodes = d3Nodes.concat(ns);
+    d3Edges = d3Edges.concat(es);
+    refreshForceGraph();
+}
 function findNodeStartX(d, i, multiplierSet){
 	var cols = Math.round(Math.sqrt(nodesInRegion(d.region).length));
 
@@ -201,106 +201,6 @@ function findNodeStartY(d, i, multiplierSet){
 		d.y = cy;
 	}
 	return parseInt(d.y);
-}
-
-//adds an sgroup to the drawing based on the circle id;
-function addSGroup(circleObj) {
-	var circle = circleObj //findCircleId(id);
-	console.log(circle);
-
-	var svg = d3.select("svg");
-	
-	svg.select("g")
-		.append("circle")
-		.attr("r", function(){
-			circle.r = circle.r;
-			return circle.r
-		})
-		.attr("cx",function(){
-			circle.x = circle.x ;
-			return circle.x
-		})
-		.attr("cy",function(){
-			circle.y = circle.y;
-			return circle.y
-		})
-		.attr("class","euler")
-		.attr("id", function(d){
-			circle.svg = d3.select(this);
-			return "circle"+circle.id;
-		})
-		.attr("style","fill: none; stroke:blue;")
-		.style("opacity", 0)
-		.transition()
-		.style("opacity", 100)
-		.duration(duration);
-
-	svg.select("g")
-		.append("text")
-		.text(function(){
-			circle.labelSvg = d3.select(this);
-			return circle.label;
-		})
-		.attr("x", function(){
-			return circle.x;
-		})
-		.attr("y", function(){
-			return (circle.y - circle.r)+25 ;
-		})
-		.attr("width", 20)
-		.attr("height", 20)
-		.attr("style", "font-weight:bold; font-size:1.5em; font-family:sans-serif;")
-		.attr("id","label"+circle.id)
-		.style("opacity", 0)
-		.transition()
-		.style("opacity", 100)
-		.duration(duration);;
-
-	for (var i = 0; i < nodes.length; i++){
-		var node = nodes[i];
-		//console.log(node.regionText, id, )
-		if (node.regionText.indexOf(circle.id) != -1){
-			//move node
-			node.x = findNodeStartX(node, i, false);
-			node.y = findNodeStartY(node, i, false);
-
-			//var nodeSvg = d3.select("#"+node.label);
-			//console.log(node.label, nodeSvg);
-
-			//add new node
-
-			if ($("#"+node.label).length == 0){
-				addNode(node);
-			}
-		}
-	}
-}
-
-function deleteSGroup(circle) {
-	console.log("deleting s group", circle.id);
-
-	//var circlesRemove = findAllCirclesId(id, circles);
-	//console.log(circlesRemove, id, circles);
-	//console.log(circlesRemove[0].svg, circlesRemove[0].labelSvg);
-	//for (var i = 0; i < circlesRemove.length; i++){
-		circle.svg
-			.transition()
-			.style("opacity", 0)
-			.duration(duration)
-			.remove();
-
-		circle.labelSvg
-			.transition()
-			.style("opacity", 0)
-			.duration(duration)
-			.remove();
-
-	//}
-	
-
-	//redraw all rectangles
-	drawRectangles(false);
-
 }
 
 function addNode(node) {
@@ -336,6 +236,7 @@ function removeNodes(nodes) {
 	    if(title === n.name){
 		svgN.remove();
 		removeEdges(n);
+		d3Nodes.splice(d3Nodes.indexOf(n),1);
 		break;
 	    }
 	}
@@ -346,4 +247,7 @@ function removeNodes(nodes) {
 function removeEdges(node){
     svg.selectAll('line[source="'+node.name+'"]').remove();
     svg.selectAll('line[target="'+node.name+'"]').remove();
+    d3Edges = d3Edges.filter(function (e){
+	return !edgeContainsNode(node,e);
+    });
 }

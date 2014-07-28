@@ -92,26 +92,28 @@ function profilingStopped(){
 function parseHighTopology(input) {
     var grpArrStr = input.replace(/\s+/, "").replace("{s_group_init_config,","").slice(0,-1);
     parseGroupStr(grpArrStr);
-    edges = generateEdges();
+    edges = generateEdges(nodes);
     drawForceGraph(nodes,edges);
 }
 
-function generateEdges(){
+function generateEdges(ns){
     var nodesDone = [];
     var edges = [];
-    for(var i = 0; i < nodes.length; i++){
-	var n = nodes[i];
-	var temp = createEdges(n,nodesDone);
+    var tmpNodes = ns;
+    for(var i = 0; i < ns.length; i++){
+	var n = tmpNodes[i];
+	var temp = createEdges(n,nodesDone,ns);
 	edges = edges.concat(temp);
 	nodesDone.push(n);
     }
     return edges;
 }
 
-function createEdges(node, nodesDone){
+function createEdges(node, nodesDone, ns){
     var edges = [];
-    for(var i = 0; i < nodes.length; i++){
-	var n = nodes[i];
+    var tmpNodes = ns;
+    for(var i = 0; i < ns.length; i++){
+	var n = tmpNodes[i];
 	if(n != node && $.inArray(n,nodesDone) === -1){
 	    for(var j = 0; j <node.groups.length;j++){
 		var group = node.groups[j];
@@ -201,17 +203,33 @@ function parseInput(input){
 function parseAddSGroup(input) {
 	//"{s_group,'node1@127.0.0.1',new_s_group,[group1,['node1@127.0.0.1','node2@127.0.0.1']]}."
 
-	var grpDetails = input.split(",");
+    var grpDetails = input.split(",");
 
-	var sgroupName = grpDetails[3].substring(1);
-	console.log(sgroupName, grpDetails);
+    var sgroupName = grpDetails[3].substring(1);
+    var nodeStrings = grpDetails.slice(4);
+    nodeStrings = parseNodeArray(nodeStrings);
+    var newGroup = new S_group(sgroupName);
+    var newNodes = [];
+    nodeStrings.forEach(function (n){
+	newNodes.push(new Node2(n,newGroup));
+    });
+    var newEdges = generateEdges(newNodes);
+    addNodes(newNodes,newEdges);
+}
 
-
+function parseNodeArray(strings){
+    strings[0] = strings[0].substring(1);
+    strings[strings.length-1] = strings[strings.length-1].slice(0,-4);
+    var res = [];
+    for (var i = 0; i < strings.length; i++){
+	res[i] = strings[i].replace(/'/g,"");
+    }
+    return res;
 }
 
 function parseDeleteSGroup(input){
     
-        // "{s_group,'node1@127.0.0.1',delete_s_group,[group1]}."
+    // "{s_group,'node1@127.0.0.1',delete_s_group,[group1]}."
     var sGroupName = input.split(",")[3];
     sGroupName = sGroupName.substring(1,sGroupName.length-3);
     var group = groups.filter(function (e){return (e.name === sGroupName);})[0];
