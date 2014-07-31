@@ -5,55 +5,60 @@ var groupMap = new Array();
 var colorIterator = 0;
 var gradientIdIterator = 0;
 var force;
-var d3Nodes;
-var d3Edges;
-
+var d3Nodes = new Array();
+var d3Edges = new Array();
+var groups;
+var link,node;
 function drawForceGraph(ns,es){
+    d3Nodes = ns;
+    d3Edges = es;
     force = d3.layout.force()
-       .size([width,height])
-       .linkDistance([100])
-       .charge([-1000]);
+	.nodes(d3Nodes)
+	.links(d3Edges)
+	.size([width,height])
+	.linkDistance([100])
+	.charge([-1000]);
+    force.on("tick", tickFunction);
     svg = d3.select("#highLevel").append("svg")
 	    .attr("width",width)
 	    .attr("height",height);
-    d3Nodes = ns;
-    d3Edges = es;
+    node = svg.selectAll(".node");
+    link = svg.selectAll(".link");
     refreshForceGraph();
 }
 
 function refreshForceGraph(){
-    $("svg").empty();
-    force = force
-	.nodes(d3Nodes)
-	.links(d3Edges)
-	.start();
-    var edges = svg.selectAll("line")
-       .data(d3Edges)
-       .enter()
-       .append("line")
-       .style("stroke","#ccc")
-       .style("stroke-width",6)
-       .attr("source", function(e){return e.source.name;})
-       .attr("target", function(e){return e.target.name;});
-    edges.append("title").text("Total messages= 0, total size = 0");
-    var nodes = svg.selectAll("circle")
-       .data(d3Nodes)
-       .enter()
-       .append("circle")
-       .attr("r",20)
-       .style("fill", fillCircle)
-       .call(force.drag);
-    nodes.append("title").text(function(d){ return d.name;});
-    force.on("tick", function(){
-      edges.attr("x1", function(d) { return d.source.x; })
-           .attr("y1", function(d) { return d.source.y; })
-           .attr("x2", function(d) { return d.target.x; })
-           .attr("y2", function(d) { return d.target.y; });
+    link = link.data(d3Edges, function(l){return l.source.name + "-" + l.target.name;});
+    link
+	.enter()
+	.insert("line", ".node")
+	.attr("class","link")
+	.style("stroke","#ccc")
+	.style("stroke-width",6)
+        .append("title").text("Total messages= 0, total size = 0");
+    link.exit().remove();
 
-      nodes.attr("cx", function(d) { return d.x; })
-           .attr("cy", function(d) { return d.y; });
-      });
-    
+    node = node.data(d3Nodes, function(n){return n.name;});
+    node
+	.enter()
+	.append("circle")
+	.attr("class",function(d) {return "node " + d.name;})
+	.attr("r",20)
+	.style("fill", fillCircle)
+	.call(force.drag)
+        .append("title").text(function(d){ return d.name;});
+    node.exit().remove();
+    force.start();
+}
+
+function tickFunction(){
+    link.attr("x1", function(d) { return d.source.x; })
+        .attr("y1", function(d) { return d.source.y; })
+        .attr("x2", function(d) { return d.target.x; })
+        .attr("y2", function(d) { return d.target.y; });
+
+    node.attr("cx", function(d) { return d.x; })
+        .attr("cy", function(d) { return d.y; });
 }
 
 function edgeTitle(e){
@@ -165,89 +170,37 @@ function resetEdgeColor(){
 
 
 function addNodes(ns,es){
-    d3Nodes = d3Nodes.concat(ns);
-    d3Edges = d3Edges.concat(es);
+    ns.forEach(function (n){d3Nodes.push(n);});
+    es.forEach(function (e){d3Edges.push(e);});
     refreshForceGraph();
-}
-function findNodeStartX(d, i, multiplierSet){
-	var cols = Math.round(Math.sqrt(nodesInRegion(d.region).length));
-
-	//console.log(cols, d.label);
-	//console.log((i % cols)+1, i, cols, nodes.length, d.region.width, (d.region.width / (cols + 1)));
-	var cx = ( ((i % cols)+1) * (d.region.width / (cols + 1)) ) + d.region.x;
-	 //var cx = (Math.random() * d.region.width) + d.region.x;
-	if (multiplierSet){
-		d.x = cx* multiplier;
-	} else {
-		d.x = cx;
-	}
-	
-	//console.log("x", d);
-	return parseInt(d.x) ;
-}
-
-
-function findNodeStartY(d, i, multiplierSet){
-
-	var cols = Math.round(Math.sqrt(nodesInRegion(d.region).length));
-
-	var i = nodesInRegion(d.region).indexOf(d);
-
-	var cy = ((Math.floor(i / cols)+1) * (d.region.height / (cols + 1))) + d.region.y;
-
-	if (multiplierSet){
-		d.y = cy* multiplier;
-	} else {
-		d.y = cy;
-	}
-	return parseInt(d.y);
-}
-
-function addNode(node) {
-	console.log("drawing node: ", node, node.x, node.y, node.label);
-
-	d3.select("svg").append("circle")
-		.attr("r",0)
-		.attr("cx",node.x)
-		.attr("cy",node.y)
-		.attr("id", node.label)
-		.attr("class","node")
-		.style("fill", "green")
-		.transition()
-		.attr("r", 5 * 4)
-		.duration(3*duration/4)
-		.transition()
-		.delay(3*duration/4)
-		.attr("r", 5)
-		.duration(duration/4)
-		.style("fill", "blue");
-		//.append("svg:title")
-        //.text(node.label);
-
 }
 
 function removeNodes(nodes) {
-    var allNodes = svg.selectAll("circle")[0];
+    var allNodes = d3Nodes;
     for(var i = 0; i < nodes.length; i++){
 	for (var j = 0;j <  allNodes.length; j++){
 	    var n = nodes[i];
-	    var svgN = allNodes[j];
-	    var title = $(svgN).children("title").text();
+	    var d3N = allNodes[j];
+	    var title = d3N.name; 
 	    if(title === n.name){
-		svgN.remove();
 		removeEdges(n);
 		d3Nodes.splice(d3Nodes.indexOf(n),1);
 		break;
 	    }
 	}
     }
-    force.start();
 }
 
 function removeEdges(node){
-    svg.selectAll('line[source="'+node.name+'"]').remove();
-    svg.selectAll('line[target="'+node.name+'"]').remove();
+    //svg.selectAll('line[source="'+node.name+'"]').remove();
+    //svg.selectAll('line[target="'+node.name+'"]').remove();
     d3Edges = d3Edges.filter(function (e){
 	return !edgeContainsNode(node,e);
     });
+}
+
+function removeNodesAndEdges(nodes, edges){
+    nodes.forEach(function (n){removeElement(n,d3Nodes);});
+    edges.forEach(function (e){removeElement(e,d3Edges);});
+    refreshForceGraph();
 }

@@ -44,6 +44,26 @@ function Node2(name, s_group){
     this.isInGroup = function (g) {return $.inArray(g, this.groups) > -1;};
 }
 
+function compareNodes(node1,node2){
+    if(node1.name < node2.name){
+	return -1;
+    }
+    if (node1.name > node2.name){
+	return 1;
+    }
+    return 0;
+}
+
+function compareEdges(edge1,edge2){
+    var sourceCompare = compareNodes(edge1.source,edge2.source);
+    if( sourceCompare === 0){
+	return compareNodes(edge1.target,edge2.target);
+    }
+    return sourceCompare;
+    
+
+}
+
 function S_group(name) {
     this.name = name;
     this.nodes= [];
@@ -52,6 +72,12 @@ function S_group(name) {
 	var n1Member = $.inArray(n1, this.nodes) > -1;
 	var n2Member = $.inArray(n2, this.nodes) > -1;
 	return n1Member && n2Member;
+    };
+    this.removeNode = function (node) {
+	this.nodes = this.nodes.filter(
+	    function(n){
+		return !(n === node);
+	    });
     };
 }
 function Edge(node1, node2, size){
@@ -277,4 +303,15 @@ function findNextCircleKey(circles) {
 			return String.fromCharCode(i);
 		}
 	}
+}
+
+function removeElement(elem, arr){
+    var index;
+    for(var i = 0; i<arr.length;i++){
+	var temp = arr[i];
+	if (temp === elem){
+	    index = i;
+	}
+    }
+    arr.splice(index,1);
 }

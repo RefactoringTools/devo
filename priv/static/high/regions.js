@@ -1,6 +1,6 @@
 var circles = [];
-var nodes = [];
-var edges = [];
+//var nodes = [];
+//var edges = [];
 var zones = [];
 var groups = [];
 var multiplier = 3;
@@ -19,24 +19,6 @@ var interval; //holds force tick
 
 var svg;
 var times = [];
-
-
-function next(){
-	iterateGraph(nodes, edges);
-}
-
-function startForce(){
-	interval = setInterval(
-		function() {
-			next();
-			console.log("force tick");
-		}
-	,500);
-}
-
-function stopForce() {
-	clearInterval(interval);
-}
 
 function parseComms(commsFile){
 	var timeInstance = commsFile;	
@@ -59,8 +41,8 @@ function parseComms(commsFile){
 			var count = parseInt(interactionDetails[2]);
 
 		        var size = parseInt(interactionDetails[3]);
-			var startNode = findNode(start, nodes);
-			var finishNode = findNode(finish, nodes);
+			var startNode = findNode(start, d3Nodes);
+			var finishNode = findNode(finish, d3Nodes);
 		        addCountToEdge(startNode, finishNode,count,size);
 		    
 
@@ -68,7 +50,7 @@ function parseComms(commsFile){
 		}
     if(interactions.length > 1)
 	{
-            drawEdges(edges);
+            drawEdges(d3Edges);
 	} else {
 	    resetEdgeColor();
 	}
@@ -76,14 +58,14 @@ function parseComms(commsFile){
 }
 
 function addCountToEdge(start, finish, count,size) {
-    var e = lookupEdge(start,finish,edges);
+    var e = lookupEdge(start,finish,d3Edges);
     e.size = count;
     e.totalCount += count;
     e.totalSize += size;
 }
 
 function profilingStopped(){
-    nodes = [];
+    d3Nodes = [];
     circles = [];
     rectangles = [];
     groups = [];
@@ -92,12 +74,15 @@ function profilingStopped(){
 function parseHighTopology(input) {
     var grpArrStr = input.replace(/\s+/, "").replace("{s_group_init_config,","").slice(0,-1);
     parseGroupStr(grpArrStr);
-    edges = generateEdges(nodes);
-    drawForceGraph(nodes,edges);
+    d3Edges = generateEdges(d3Nodes);
+    drawForceGraph(d3Nodes,d3Edges);
 }
 
 function generateEdges(ns){
-    var nodesDone = [];
+    return getEdges(ns,[]);
+}
+
+function getEdges(ns, nodesDone){
     var edges = [];
     var tmpNodes = ns;
     for(var i = 0; i < ns.length; i++){
@@ -154,7 +139,7 @@ function createNode(name,s_group) {
     var node = getNode(name);
     if(node === null){
 	node = new Node2(name,s_group);
-	nodes.push(node);
+	d3Nodes.push(node);
     } else {
 	if (!node.isInGroup(s_group)){
 	    node.addToGroup(s_group);
@@ -164,7 +149,7 @@ function createNode(name,s_group) {
 
 function getNode(name){
     var res = null;
-    nodes.forEach(function (n) {if (n.name === name){res = n;}});
+    d3Nodes.forEach(function (n) {if (n.name === name){res = n;}});
     return res;
 }
 
@@ -178,7 +163,7 @@ function getGroupName(str){
 
 function parseInput(input){
 
-	stopForce();
+	//stopForce();
 
 	if (input.split(",")[2] == "new_s_group"){
 		parseAddSGroup(input);
@@ -209,6 +194,7 @@ function parseAddSGroup(input) {
     var nodeStrings = grpDetails.slice(4);
     nodeStrings = parseNodeArray(nodeStrings);
     var newGroup = new S_group(sgroupName);
+    groups.push(newGroup);
     var newNodes = [];
     nodeStrings.forEach(function (n){
 	newNodes.push(new Node2(n,newGroup));
@@ -244,120 +230,61 @@ function parseDeleteSGroup(input){
 	}
 	
     }
+    removeElement(group,groups);
     removeNodes(singleGroupNodes);
+    refreshForceGraph();
     recolorNodes(nodesForRecolor);
-}
-
-function removeElement(elem, arr){
-    var index;
-    for(var i = 0; i<arr.length;i++){
-	var temp = arr[i];
-	if (temp === elem){
-	    index = i;
-	}
-    }
-    return arr.splice(index,1);
 }
 
 function parseAddNodes(input) {
 
-//{s_group,'node1@127.0.0.1',add_nodes,[aa,['node3@127.0.0.1']]}.
+    //"{s_group,'node1@127.0.0.1',add_nodes,[group1,['node3@127.0.0.1']]}."
 
-	var circleLabel = input.split(",")[3].substring(1);
-	var circle = findCircleLabel(circleLabel);
-	var rectangle = findRectangleFromLabel(circle.id, rectangles);
+    var groupName = input.split(",")[3].substring(1);
+    var nodesArr = input.split(",");
+    //The node to be added
+    //['node3@127.0.0.1']]}.
+    var rawNode = nodesArr[4];
+    rawNode = rawNode.slice(2,-5);
+    var group = lookupGroup(groupName);
+    //We need a non updating version of this array hence the slice 0
+    var existingNodes = group.nodes.slice(0);
+    var newNode = getNode(rawNode);
+    newNode.addToGroup(group);
+    var newEdges = getEdges(group.nodes, existingNodes);
+    addNodes([],newEdges);
+    recolorNodes([newNode]);
+}
 
-	var nodesArr = input.split(",");
-	for (var i = 4; i < nodesArr.length; i++){
-		//console.log(nodesArr[i]);
-		var rawNode = nodesArr[i];
-
-		var start = 1;
-		var finish = rawNode.indexOf("@");
-
-		if (i == 4){
-			start = 2;
-		}
-		var nodeName = rawNode.substring(start, finish);
-
-		var node = findNode(nodeName, nodes);
-		if (node == null) {
-
-			node = new Node(nodeName, rectangle, circle.id);
-			nodes.push(node);
-			node.x = findNodeStartX(node, nodes.length, false);
-			node.y = findNodeStartY(node, nodes.length, false);
-			
-			addNode(node);
-
-		} else {
-			console.log("groupings need to change");
-			node.regionText = node.regionText + circle.id;
-			node.regionText = node.regionText.split("").sort().join("");
-		}
-		console.log(node, nodeName, node.regionText, rectangle);
+function lookupGroup(groupName){
+    for(var i = 0; i < groups.length; i++){
+	var g = groups[i];
+	if(g.name === groupName){
+	    return g;
 	}
-
-	circleType = circleEnum.ADD;
-
-	eulerText = "";
-	for (var i = 0; i < nodes.length; i++){
-		//nodes[i].region = findRectangleFromLabel(nodes[i].regionText);
-		eulerText = eulerText + nodes[i].regionText + " ";
-	}
-
-	console.log(eulerText);
-
-	conn.send(eulerText);
-
-
+    }
+    return -1;
 }
 
 function parseRemoveNodes(input) {
-
-	var circleLabel = input.split(",")[3].substring(1);
-	var circle = findCircleLabel(circleLabel);
-	var rectangle = findRectangleFromLabel(circle.id, rectangles);
-
-	var nodesArr = input.split(",");
-	for (var i = 4; i < nodesArr.length; i++){
-		//console.log(nodesArr[i]);
-		var rawNode = nodesArr[i];
-
-		var start = 1;
-		var finish = rawNode.indexOf("@");
-
-		if (i == 4){
-			start = 2;
-		}
-		var nodeName = rawNode.substring(start, finish);
-		var node = findNode(nodeName, nodes);
-		var nodeI = nodes.indexOf(node);
-		nodes.splice(nodeI, 1);
-
-		console.log(nodeName, node);
-		
-		removeNode(node);
-
-		console.log(nodeName, nodes, rectangle);
-	}
-
-	redrawVis();
-
-}
-
-function redrawVis() {
-
-	circleType = circleEnum.ADD;
-
-	eulerText = "";
-	for (var i = 0; i < nodes.length; i++){
-		//nodes[i].region = findRectangleFromLabel(nodes[i].regionText);
-		eulerText = eulerText + nodes[i].regionText + " ";
-	}
-
-	console.log(eulerText);
-
-	conn.send(eulerText);
-
+    //    "{s_group,'node1@127.0.0.1',remove_nodes,[group1,['node3@127.0.0.1']]}."
+    var splitInput = input.split(",");
+    var groupName  = splitInput[3].substring(1);
+    var nodeName = splitInput[4].slice(2,-5);
+    var group = lookupGroup(groupName);
+    var node = getNode(nodeName);
+    var edgesForRemoval = [];
+    group.removeNode(node);
+    for(var i = 0; i < group.nodes.length;i++){
+	var tNode = group.nodes[i];
+	var tEdge = lookupEdge(node,tNode,d3Edges);
+	edgesForRemoval.push(tEdge);
+    }
+    removeElement(group, node.groups);
+    var nodesForRemoval = [];
+    if(node.groups.length === 0){
+	nodesForRemoval.push(node);
+    }
+    removeNodesAndEdges(nodesForRemoval,edgesForRemoval);
+    recolorNodes([node]);
 }
