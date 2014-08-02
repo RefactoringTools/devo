@@ -45,12 +45,9 @@ When you check your browser now the visualization should be running. You can see
 To run the fourth option start by entering:
 
 ```
-./start.sh node2@127.0.0.1 -detached
-./start.sh node3@127.0.0.1 -detached
-./start.sh node4@127.0.0.1 -detached
-./start.sh node5@127.0.0.1 -detached
-./start.sh node1@127.0.0.1 
+./fiveNodeLocalStart.sh
 ```
+This automatically starts five erlang nodes.
 
 Go to the web inteface then add and select all of these nodes and start the visualization. Now go back to the terminal that is running all of the nodes and type:
 
@@ -69,8 +66,18 @@ orbit:stop('node5@127.0.0.1').
 
 ### Visualizing S_group operations
 
-For the final visualization option requires that you have SD Erlang installed. The setup for this example is the same as running any of the first three examples except that this time the command to node1 will be:
+For the final two visualization options require an installation of SD Erlang. The setup for this example is the same as the previous example except that this time the command to node1 will be:
 
 ```
 test_s_group:run().
 ```
+
+### Full High Level visualisation
+
+The 'High level visualisation' option combines both the S_group operations and inter-node communication visualisations. The testing script is much like the s_group operations example and can be started by running:
+
+```
+high_level_test:run().
+```
+
+On node1.
