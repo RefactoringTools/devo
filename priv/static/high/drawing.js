@@ -7,7 +7,7 @@ var gradientIdIterator = 0;
 var force;
 var d3Nodes = new Array();
 var d3Edges = new Array();
-var groups;
+var groups = new Array();
 var link,node;
 function drawForceGraph(ns,es){
     d3Nodes = ns;
@@ -33,6 +33,8 @@ function refreshForceGraph(){
 	.enter()
 	.insert("line", ".node")
 	.attr("class","link")
+        .attr("source", function(l){return l.source.name;})
+        .attr("target", function(l){return l.target.name;})
 	.style("stroke","#ccc")
 	.style("stroke-width",6)
         .append("title").text("Total messages= 0, total size = 0");
@@ -160,7 +162,7 @@ function getSvgNode(node){
 function getSvgEdge(edge){
     var sourceName = edge.source.name;
     var targetName = edge.target.name;
-    var svgElements = svg.select('[source="'+ sourceName+'"][target="'+targetName+'"]')[0];
+    var svgElements = d3.select('[source="'+ sourceName+'"][target="'+targetName+'"]')[0];
     return svgElements[0];
 }
 

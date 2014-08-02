@@ -1,13 +1,10 @@
-var circles = [];
 //var nodes = [];
 //var edges = [];
-var zones = [];
-var groups = [];
+//var groups = [];
 var multiplier = 3;
 var c = 20;
 var t = 200;
 var k;
-var rectangles;
 var currentTime = 0;
 var eulerText = "";
 var width = 800;
@@ -66,8 +63,6 @@ function addCountToEdge(start, finish, count,size) {
 
 function profilingStopped(){
     d3Nodes = [];
-    circles = [];
-    rectangles = [];
     groups = [];
 }
 
