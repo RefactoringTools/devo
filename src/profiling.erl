@@ -71,6 +71,22 @@ start_profiling(s_group, Nodes=[N|_Ns], Pid) ->
             Pid!{s_group_init_config, NodeGrps},
             devo_trace:start_trace(s_group, Nodes, {devo, node()})
     end;
+start_profiling(full_high_level, Nodes=[N|_Ns], Pid) ->
+    case get_init_s_group_config(N) of
+	{badrpc, Reason} ->
+            io:format("Devo failed to start profiling for reason:\n~p\n",
+                      [Reason]);
+        undefined ->
+            Pid!{s_group_init_config, []},
+	    erlang:start_timer(1, Pid, <<"Online profiling started...!">>),
+	    devo_trace:start_trace(inter_node,Nodes, {devo, node()}),
+            devo_trace:start_trace(s_group, Nodes, {devo, node()});
+        {ok, NodeGrps} ->
+            Pid!{s_group_init_config, NodeGrps},
+	    erlang:start_timer(1, Pid, <<"Online profiling started...!">>),
+            devo_trace:start_trace(s_group, Nodes, {devo, node()}),
+	    devo_trace:start_trace(inter_node, Nodes, {devo, node()})            
+    end;
 start_profiling(Cmd, _Nodes, _Pid) ->
     io:format("start_profiling: unnexpected command:~p\n", [Cmd]),
     ok.
