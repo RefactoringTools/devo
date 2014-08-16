@@ -69,8 +69,10 @@ function profilingStopped(){
 function parseHighTopology(input) {
     var grpArrStr = input.replace(/\s+/, "").replace("{s_group_init_config,","").slice(0,-1);
     parseGroupStr(grpArrStr);
-    d3Edges = generateEdges(d3Nodes);
-    drawForceGraph(d3Nodes,d3Edges);
+    if (!(d3Nodes.length === 0)){
+        d3Edges = generateEdges(d3Nodes);
+        drawForceGraph(d3Nodes,d3Edges);
+    }
 }
 
 function generateEdges(ns){
@@ -111,6 +113,9 @@ function createEdges(node, nodesDone, ns){
 function parseGroupStr(str){
     // Get rid of outer braces
     var groupStrings = str.replace('[{', '').slice(0,-1);
+    if (groupStrings === "[]"){
+        return;
+    }
     while(!(groupStrings === "")){
 	var s_groupNameArr = getGroupName(groupStrings);
 	groupStrings = s_groupNameArr[0];
