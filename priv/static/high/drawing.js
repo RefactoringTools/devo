@@ -46,10 +46,10 @@ function refreshForceGraph(){
 	.append("circle")
 	.attr("class",function(d) {return "node " + d.name;})
 	.attr("r",20)
-	.style("fill", fillCircle)
 	.call(force.drag)
         .append("title").text(function(d){ return d.name;});
     node.exit().remove();
+    d3.selectAll(".node").style("fill", fillCircle);
     force.start();
 }
 

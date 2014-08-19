@@ -231,6 +231,8 @@ function getNodes(nodeNames, s_group){
 	if(node === -1){
 	    node = new Node2(name, s_group);
 	    newNodes.push(node);
+	} else {
+	    node.addToGroup(s_group);
 	}
 	allNodes.push(node);
     }
