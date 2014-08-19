@@ -20,3 +20,10 @@ teardown(N) ->
 
 stop(Node)->
     rpc:call(Node, erlang, halt, []).
+
+stop_all()->
+    stop('node2@127.0.0.1'),
+    stop('node3@127.0.0.1'),
+    stop('node4@127.0.0.1'),
+    stop('node5@127.0.0.1').
+    

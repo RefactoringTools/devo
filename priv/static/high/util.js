@@ -1,4 +1,3 @@
-
 /** A labelled circle */
 function Circle(id,label,r,x,y) {
 	this.id = id;
@@ -37,14 +36,75 @@ function Node(label,region, regionText){
 	vertical = 0;
 	newNode = false;
 }
-
-function Edge(source, target, size){
-	this.source = source;
-	this.target = target;
-	this.size = size;
+function Node2(name, s_group){
+    this.name = name;
+    this.groups = [s_group];
+    s_group.addNode(this);
+    this.addToGroup = function (group) {this.groups.push(group); group.addNode(this);};
+    this.isInGroup = function (g) {return $.inArray(g, this.groups) > -1;};
 }
 
+function compareNodes(node1,node2){
+    if(node1.name < node2.name){
+	return -1;
+    }
+    if (node1.name > node2.name){
+	return 1;
+    }
+    return 0;
+}
 
+function compareEdges(edge1,edge2){
+    var sourceCompare = compareNodes(edge1.source,edge2.source);
+    if( sourceCompare === 0){
+	return compareNodes(edge1.target,edge2.target);
+    }
+    return sourceCompare;
+    
+
+}
+
+function S_group(name) {
+    this.name = name;
+    this.nodes= [];
+    this.addNode = function (node){this.nodes.push(node);};
+    this.bothNodesInGroup= function(n1,n2){
+	var n1Member = $.inArray(n1, this.nodes) > -1;
+	var n2Member = $.inArray(n2, this.nodes) > -1;
+	return n1Member && n2Member;
+    };
+    this.removeNode = function (node) {
+	this.nodes = this.nodes.filter(
+	    function(n){
+		return !(n === node);
+	    });
+    };
+}
+function Edge(node1, node2, size){
+        this.source = node1;
+        this.target = node2;
+	this.size = size;
+        this.totalCount = 0;
+        this.totalSize = 0;
+}
+
+function lookupEdge(node1, node2, edges){
+    for(var i = 0; i < edges.length;i++){
+	var e = edges[i];
+	if (isNodeEdge(node1,node2, e)){
+	    return e;
+	}
+    }
+    return -1;
+}
+
+function isNodeEdge(node1,node2,edge){
+    return edgeContainsNode(node1,edge) && edgeContainsNode(node2,edge);
+}
+
+function edgeContainsNode(node,edge){
+   return edge.source === node || edge.target === node;
+}
 function Time(time){
 	this.time = time;
 	this.interactions = [];
@@ -171,7 +231,7 @@ Finds a node given a label
 function findNode(label, nodes){
 	for (var i = 0; i < nodes.length; i++){
 		//console.log(nodes[i].label,label, nodes[i].label == label);
-		if (nodes[i].label == label) {
+		if (nodes[i].name == label) {
 			return nodes[i];
 		}
 	} 
@@ -243,4 +303,15 @@ function findNextCircleKey(circles) {
 			return String.fromCharCode(i);
 		}
 	}
+}
+
+function removeElement(elem, arr){
+    var index;
+    for(var i = 0; i<arr.length;i++){
+	var temp = arr[i];
+	if (temp === elem){
+	    index = i;
+	}
+    }
+    arr.splice(index,1);
 }

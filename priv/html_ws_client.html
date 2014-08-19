@@ -1,6 +1,6 @@
 <html>
   <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <meta charset="UTF8">  
     <title>Erlang Online Visualisation</title>
     <script type="text/javascript">
       var originalHeight = 620;
@@ -19,7 +19,9 @@
     
     </script>
     <!-- <script src="/static/jquery.min.js"></script> -->
-    <script type="text/javascript" src="static/lib/d3.v2.js"></script>
+    <!-- <script src="static/lib/d3.js"></script>-->
+    <script src="http://d3js.org/d3.v3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="static/lib/underscore-min.js"></script>
     <script type="text/javascript" src="static/lib/jquery-1.8.3.js"></script>
     <script type="text/javascript" src="static/lib/jquery-ui.js"></script>
     <script type="text/javascript" src="static/lib/detect-zoom-master/detect-zoom.js"></script>
@@ -60,7 +62,11 @@
       {
           wsHost = $("#server").val()
           websocket = new WebSocket(wsHost);
-          showScreen('<b>Connecting to: ' +  wsHost + '</b>'); 
+          var hId = $("#hostId").html().indexOf(wsHost);
+          if ($("#hostId").html().indexOf(wsHost) === -1){
+             $("#hostId").append(wsHost);
+          }
+          //showScreen('<b>Connecting to: ' +  wsHost + '</b>'); 
           websocket.onopen = function(evt) { onOpen(evt) }; 
           websocket.onclose = function(evt) { onClose(evt) }; 
           websocket.onmessage = function(evt) { onMessage(evt) }; 
@@ -74,27 +80,37 @@
 
       
       function toggle_connection(input){
-          if(websocket.readyState == websocket.OPEN){
-            if (profile_on==1) {
+          if (profile_on==1) {
                   profile_on=0;
+                  wipe_graphs();
                   disconnect();
-                  }
-            else {
-				          start_profile(input);
-                  //start();
-				          console.log("before display check", high);
-                  if (high) {
-                    $("#highLevel").show();
-                  } else {
-                    $("#lowLevel").show();
-                  }
-                  profile_on=1;
-                }
+                  return;
+          }
+          if(websocket.readyState == websocket.OPEN){
+             start_profile(input);
+             console.log("before display check", high);
+             profile_on=1;
           } else {
             connect();
             start_profile(input);
             profile_on=1
-          };
+          }
+          if (high) {
+            $("#highLevel").show();
+          } else {
+            $("#lowLevel").show();
+          }
+      };
+      
+      function wipe_graphs() {
+         console.log("Wiping graphs");
+         if (high) {
+            $("#highLevel").hide();
+            $("#highLevel").html('');
+            profilingStopped();
+         } else {
+            $("#lowLevel").hide();
+         }
       };
 
       function findFeatureSelection(feature){
@@ -209,18 +225,6 @@
           setTimeout(function(){websocket.send(txt)}, 1000);
           }
       };
-           
-        
-      
-      function sendTxt() {
-          if(websocket.readyState == websocket.OPEN){
-              txt = $("#send_txt").val();
-              websocket.send(txt);
-              showScreen('sending: ' + txt); 
-          } else {
-               showScreen('websocket is not connected'); 
-          };
-      };
 
       function onOpen(evt) { 
           showScreen('<span style="color: green;">Connected ...</span>'); 
@@ -234,7 +238,7 @@
 
       function onMessage(evt) { 
          // showScreen('<span style="color: blue;">' + evt.data+ '</span>'); 
-         console.log(evt.data);
+       console.log("Data revieved by onMessage in html_ws_client");
        if (high){
 		 parseInput(evt.data);
        } else {
@@ -244,7 +248,7 @@
       };  
 
       function showScreen(txt) { 
-          $('#output').prepend('<p>' + txt + '</p>');
+          $('#connection_status').html('<p>' + txt + '</p>');
       };
 
       function clearScreen() 
@@ -269,6 +273,7 @@
           <input type="radio" name="feature" value="rq_migration">Run-queue length and process migration<br>
           <input type="radio" name="feature" value="inter_node">Inter-node communication <br>
           <input type="radio" name="feature" value="s_group">S_group operations<br>
+	  <input type="radio" name="feature" value="full_high_level">High level visualisation<br>
         <p> Please select the node(s) you would like to monitor:<p>
           <select id="nodeList"  size=5 style="width: 150px;" multiple>
           </select>
@@ -289,7 +294,11 @@
     </div>
     <div id="content">						
       <button id="clear" onclick="clearScreen()" >Clear text</button>
+      <div id=hostId>
+	Host: 
+      </div>
       <div id="output"></div>
+      <div id="connection_status"></div>
     </div>
 
   <div id="lowLevel">
