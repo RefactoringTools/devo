@@ -139,7 +139,7 @@ function parseNodes(str, s_group){
 
 function createNode(name,s_group) {
     var node = getNode(name);
-    if(node === null){
+    if(node === -1){
 	node = new Node2(name,s_group);
 	d3Nodes.push(node);
     } else {
