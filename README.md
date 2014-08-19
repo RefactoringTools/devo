@@ -74,7 +74,7 @@ test_s_group:run().
 
 ### Full High Level visualisation
 
-The 'High level visualisation' option combines both the S_group operations and inter-node communication visualisations. The testing script is much like the s_group operations example and can be started by running:
+The 'High level visualisation' option combines both the S\_group operations and inter-node communication visualisations. The testing script is much like the s\_group operations example and can be started by running:
 
 ```
 high_level_test:run().
@@ -89,10 +89,11 @@ Using Devo to visualize your own project should be fairly simple.
 
 The first step is including Devo's custom implementation of the DBG module in your project's path. After running the make command you can copy dbg.beam from the ebin folder to your project's path.
 
-If your project has some initial s_group configuration without calling new_s_group then this configuration should be placed in an s_group.config file. For example config file syntax see:
+If your project has some initial s\_group configuration without calling new\_s\_group then this configuration should be placed in an s_group.config file. For example config file syntax see:
    
    ```
    %DEVOROOT%/tests/s_group.config
    ```
+You also need to make sure the devo has the same secret cookie as your project. Devo is using your default cookie as it is found in ``` ~/.erlang.cookie```. If your project is using something different then you will need to modify ```start.sh``` so that devo can share the same cookie.
 
 Now you are ready to startup devo and your own project. After both of these services are running navigate to the devo homepage and you should be ready to start profiling.
