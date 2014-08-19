@@ -81,3 +81,15 @@ high_level_test:run().
 ```
 
 On node1.
+
+Integrating Devo into your project
+----------------------------------
+
+Using Devo to visualize your own project should be fairly simple.
+
+The first step is including Devo's custom implementation of the DBG module in your project's path. After running the make command you can copy dbg.beam from the ebin folder to your project's path.
+
+If your project has some initial s_group configuration without calling new_s_group then this configuration should be placed in an s_group.config file. For example config file syntax see:
+   %DEVOROOT%/tests/s_group.config
+
+Now you are ready to startup devo and your own project. After both of these services are running navigate to the devo homepage and you should be ready to start profiling.
