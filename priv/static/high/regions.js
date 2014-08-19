@@ -71,8 +71,10 @@ function parseHighTopology(input) {
     parseGroupStr(grpArrStr);
     if (!(d3Nodes.length === 0)){
         d3Edges = generateEdges(d3Nodes);
-        drawForceGraph(d3Nodes,d3Edges);
+    } else {
+	d3Edges = [];
     }
+    drawForceGraph(d3Nodes,d3Edges);
 }
 
 function generateEdges(ns){
@@ -148,7 +150,7 @@ function createNode(name,s_group) {
 }
 
 function getNode(name){
-    var res = null;
+    var res = -1;
     d3Nodes.forEach(function (n) {if (n.name === name){res = n;}});
     return res;
 }
@@ -195,12 +197,44 @@ function parseAddSGroup(input) {
     nodeStrings = parseNodeArray(nodeStrings);
     var newGroup = new S_group(sgroupName);
     groups.push(newGroup);
-    var newNodes = [];
-    nodeStrings.forEach(function (n){
-	newNodes.push(new Node2(n,newGroup));
-    });
-    var newEdges = generateEdges(newNodes);
+    var nodeRes = getNodes(nodeStrings,newGroup);
+    var newNodes = nodeRes[1];
+    var allNodes = nodeRes[0];
+    var newEdges = generateNewEdges(allNodes);
     addNodes(newNodes,newEdges);
+}
+
+function generateNewEdges(nodes){
+    var res = [];
+    for(var i = 0; i < nodes.length; i++){
+	for(var j = 0; j < nodes.length; j++){
+	    var node1 = nodes[i];
+	    var node2 = nodes[j];
+	    if(!(node1 === node2)){
+		var lookup = lookupEdge(node1,node2,d3Edges.concat(res));
+		if(lookup === -1){
+		    var newEdge = new Edge(node1, node2, 1);
+		    res.push(newEdge);
+		}
+	    }
+	}
+    }
+    return res;
+}
+
+function getNodes(nodeNames, s_group){
+    var allNodes = [];
+    var newNodes = [];
+    for(var i = 0; i< nodeNames.length; i++){
+	var name = nodeNames[i];
+	var node = getNode(name);
+	if(node === -1){
+	    node = new Node2(name, s_group);
+	    newNodes.push(node);
+	}
+	allNodes.push(node);
+    }
+    return [allNodes, newNodes];
 }
 
 function parseNodeArray(strings){

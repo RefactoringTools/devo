@@ -20,10 +20,10 @@ function drawForceGraph(ns,es){
 	.charge([-1000]);
     force.on("tick", tickFunction);
     svg = d3.select("#highLevel").append("svg")
-	    .attr("width",width)
-	    .attr("height",height);
-    node = svg.selectAll(".node");
+	.attr("width",width)
+	.attr("height",height);
     link = svg.selectAll(".link");
+    node = svg.selectAll(".node");
     refreshForceGraph();
 }
 
