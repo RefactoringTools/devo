@@ -16,7 +16,7 @@
 %%
 %% %CopyrightEnd%
 %%
--module(dbg).
+-module(devo_dbg).
 -export([p/1,p/2,c/3,c/4,i/0,start/0,stop/0,stop_clear/0,tracer/0,
 	 tracer/2, tracer/3, get_tracer/0, get_tracer/1, tp/2, tp/3, tp/4, 
 	 ctp/0, ctp/1, ctp/2, ctp/3, tpl/2, tpl/3, tpl/4, ctpl/0, ctpl/1, 
@@ -573,7 +573,7 @@ c(Parent, M, F, A, Flags) ->
     Parent ! {self(), Res}.
 
 stop() ->
-    Mref = erlang:monitor(process, dbg),
+    Mref = erlang:monitor(process, devo_dbg),
     catch dbg ! {self(),stop},
     receive
 	{'DOWN',Mref,_,_,_} ->
@@ -594,7 +594,7 @@ req(R) ->
 	{'DOWN', Mref, _, _, _} -> % If server died
             io:format("dbg server crash\n"),
 	    exit(dbg_server_crash);
-	{dbg, Reply} ->
+	{devo_dbg, Reply} ->
 	    erlang:demonitor(Mref),
 	    receive {'DOWN', Mref, _, _, _} -> ok after 0 -> ok end,
 	    Reply
@@ -609,7 +609,7 @@ ensure() ->
 		{ok, P} ->
 		    P;
 		{error, already_started} ->
-		    dbg
+		    devo_dbg
 	    end;
 	Pid -> 
 	    Pid
@@ -768,7 +768,7 @@ loop({C,T}=SurviveLinks, Table) ->
     end.
 
 reply(Pid, Reply) ->
-    Pid ! {dbg,Reply}.
+    Pid ! {devo_dbg,Reply}.
 
 
 %%% A process-based tracer.
@@ -983,7 +983,7 @@ dhandler1(Trace, Size, Out) ->
     case element(3, Trace) of
 	'receive' ->
 	    case element(4, Trace) of
-		{dbg,ok} -> ok;
+		{devo_dbg,ok} -> ok;
 		Message ->
 		    io:format(Out, "(~p) << ~p~n", [From,Message])
 	    end;
@@ -1028,7 +1028,7 @@ dhandler1(Trace, Size, TS, Out) ->
     case element(3, Trace) of
 	'receive' ->
 	    case element(4, Trace) of
-		{dbg,ok} -> ok;
+		{devo_dbg,ok} -> ok;
 		Message ->
 		    io:format(Out, "(~p) << ~p (Timestamp: ~p)~n", [From,Message,TS])
 	    end;
