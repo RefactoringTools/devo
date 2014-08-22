@@ -87,7 +87,8 @@ Integrating Devo into your project
 
 Using Devo to visualize your own project should be fairly simple.
 
-The first step is including Devo's custom implementation of the DBG module in your project's path. After running the make command you can copy dbg.beam from the ebin folder to your project's path.
+The first step is including Devo's custom implementation of the DBG
+module (called devo\_dbg.erl) in your project's path. After running the make command you can copy devo_dbg.beam from the ebin folder to your project's path.
 
 If your project has some initial s\_group configuration without calling new\_s\_group then this configuration should be placed in an s_group.config file. For example config file syntax see:
    
