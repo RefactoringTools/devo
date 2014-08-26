@@ -62,10 +62,7 @@
       {
           wsHost = 'ws://localhost:8080/websocket';
           websocket = new WebSocket(wsHost);
-          var hId = $("#hostId").html().indexOf(wsHost);
-          if ($("#hostId").html().indexOf(wsHost) === -1){
-             $("#hostId").append(wsHost);
-          }
+          
           //showScreen('<b>Connecting to: ' +  wsHost + '</b>'); 
           websocket.onopen = function(evt) { onOpen(evt) }; 
           websocket.onclose = function(evt) { onClose(evt) }; 
@@ -237,8 +234,6 @@
       };  
 
       function onMessage(evt) { 
-         // showScreen('<span style="color: blue;">' + evt.data+ '</span>'); 
-       console.log("Data revieved by onMessage in html_ws_client");
        if (high){
 		 parseInput(evt.data);
        } else {
