@@ -25,17 +25,14 @@
 start_trace(migration, Node, Receiver) ->
     {ok, _} = do_tracer([Node], Receiver),
     {ok, _} = devo_dbg:p(all, [procs, running, scheduler_id]);
-start_trace(inter_node, Nodes,Receiver) ->
-    {ok, _} = do_tracer(Nodes,Receiver),
-    {ok, _} = devo_dbg:p(all, [send]);
-start_trace(s_group, Nodes, Receiver) ->                  
+start_trace(high_level, Nodes,Receiver) ->
     {ok, _} = do_tracer(Nodes, Receiver),
+    {ok, _} = devo_dbg:p(all, [send]),
     {ok, _} = devo_dbg:p(all, [call]),
     {ok, _} = devo_dbg:tp({s_group, new_s_group, 2},[]),
     {ok, _} = devo_dbg:tp({s_group, delete_s_group, 1},[]),
     {ok, _} = devo_dbg:tp({s_group, add_nodes, 2},[]),
     {ok, _} = devo_dbg:tp({s_group, remove_nodes, 2},[]).
-
 stop_trace() ->
     devo_dbg:stop_clear().
 
