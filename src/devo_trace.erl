@@ -24,20 +24,20 @@
 
 start_trace(migration, Node, Receiver) ->
     {ok, _} = do_tracer([Node], Receiver),
-    {ok, _} = dbg:p(all, [procs, running, scheduler_id]);
+    {ok, _} = devo_dbg:p(all, [procs, running, scheduler_id]);
 start_trace(inter_node, Nodes,Receiver) ->
     {ok, _} = do_tracer(Nodes,Receiver),
-    {ok, _} = dbg:p(all, [send]);
+    {ok, _} = devo_dbg:p(all, [send]);
 start_trace(s_group, Nodes, Receiver) ->                  
     {ok, _} = do_tracer(Nodes, Receiver),
-    {ok, _} = dbg:p(all, [call]),
-    {ok, _} = dbg:tp({s_group, new_s_group, 2},[]),
-    {ok, _} = dbg:tp({s_group, delete_s_group,1},[]),
-    {ok, _} = dbg:tp({s_group, add_nodes, 2},[]),
-    {ok, _} = dbg:tp({s_group, remove_nodes, 2},[]).
+    {ok, _} = devo_dbg:p(all, [call]),
+    {ok, _} = devo_dbg:tp({s_group, new_s_group, 2},[]),
+    {ok, _} = devo_dbg:tp({s_group, delete_s_group, 1},[]),
+    {ok, _} = devo_dbg:tp({s_group, add_nodes, 2},[]),
+    {ok, _} = devo_dbg:tp({s_group, remove_nodes, 2},[]).
 
 stop_trace() ->
-    dbg:stop_clear().
+    devo_dbg:stop_clear().
 
 do_tracer(Clients, Receiver) ->
     Res=lists:foldl(
@@ -50,12 +50,12 @@ do_tracer(Clients, Receiver) ->
 				 [_,H] = string:tokens(atom_to_list(N),"@"),
                                  H
                          end,
-                  case catch dbg:tracer(N,port,dbg:trace_port(ip,0)) of
+                  case catch devo_dbg:tracer(N,port,devo_dbg:trace_port(ip,0)) of
                       {ok,N} ->
-                          {ok,Port} = dbg:trace_port_control(N,get_listen_port),
-                          {ok,_T} = dbg:get_tracer(N),
-                          dbg:trace_client(ip,{Host,Port}, mk_trace_parser({N,Receiver})),
-                      {[N|Cs], [N|S]};
+                          {ok,Port} = devo_dbg:trace_port_control(N,get_listen_port),
+                          {ok,_T} = devo_dbg:get_tracer(N),
+                          devo_dbg:trace_client(ip, {Host,Port}, mk_trace_parser({N,Receiver})),
+                          {[N|Cs], [N|S]};
                       Other ->
                           display_warning(N,{cannot_open_ip_trace_port,
                                              Host,

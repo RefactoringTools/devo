@@ -37,7 +37,8 @@ An Erlang repl should be running in this terminal now. Go back to devo and add `
 
 ###High Level Visualisation
 
-First, if you just ran the low level example kill the ```node1``` repl. Now from the ```devo/tests``` directory run ```./fiveNodeLocalStart.sh``` again you should now see an Erlang repl for ```node1@127.0.0.1```. The difference is that this time there are four additional Erlang nodes running in the background. Now go to the devo webpage and generate five Erlang nodes, the basename is "node", the start index is 1, the end index is 5, and the domain is "@127.0.0.1". When you start the visualisation this time the five nodes should appear as colored circles. To run this example go back to the ```node1``` repl and enter ```high_level_test:run().``` this will take you through a set of s_group operations and distributed computing examples which will be visualized by Devo.
+First, if you just ran the low level example kill the ```node1``` repl. Now from the ```devo/tests``` directory run ```./fiveNodeLocalStart.sh``` again you should now see an Erlang repl for ```node1@127.0.0.1```. The difference is that this time there are four additional Erlang nodes running in the background. Now go to the devo webpage and generate five Erlang nodes, the basename is "node", the start index is 1, the end index is 5, and the domain is "@127.0.0.1". When you start the visualisation this time the five nodes should appear as colored circles. To run this example go back to the ```node1``` repl and enter ```high_level_test:run().``` this will take you through a set of s_group operations and distributed computing examples which will be visualised by Devo.
+
 Integrating Devo into your Project
 ----------------------------------
 
