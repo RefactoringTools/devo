@@ -60,17 +60,14 @@
 
       function connect()
       {
-          wsHost = $("#server").val()
+          wsHost = 'ws://localhost:8080/websocket';
           websocket = new WebSocket(wsHost);
-          var hId = $("#hostId").html().indexOf(wsHost);
-          if ($("#hostId").html().indexOf(wsHost) === -1){
-             $("#hostId").append(wsHost);
-          }
-          //showScreen('<b>Connecting to: ' +  wsHost + '</b>'); 
+          
           websocket.onopen = function(evt) { onOpen(evt) }; 
           websocket.onclose = function(evt) { onClose(evt) }; 
           websocket.onmessage = function(evt) { onMessage(evt) }; 
-          websocket.onerror = function(evt) { onError(evt) }; 
+          websocket.onerror = function(evt) { onError(evt) };
+      showScreen('<span style="color: orange;">Ready ...</span>'); 
       };  
       
       function disconnect() {
@@ -100,27 +97,28 @@
           } else {
             $("#lowLevel").show();
           }
+          showScreen('<span style="color: green;">Running ...</span>');
       };
       
-      function wipe_graphs() {
-         console.log("Wiping graphs");
-         if (high) {
-            $("#highLevel").hide();
-            $("#highLevel").html('');
-            profilingStopped();
-         } else {
-            $("#lowLevel").hide();
-         }
-      };
+   function wipe_graphs() {
+      console.log("Wiping graphs");
+      if (high) {
+         $("#highLevel").hide();
+         $("#highLevel").html('');
+         profilingStopped();
+      } else {
+         $("#lowLevel").hide();
+      }
+   };
 
       function findFeatureSelection(feature){
           var test = document.getElementsByName(feature);
           var sizes = test.length;
           for (i=0; i < sizes; i++) {
-                  if (test[i].checked==true) {
-                    high = !(i < 3); //sets which vis type to use
-					          console.log("vis check:", i, high);
-                    return test[i].value;
+		var temp = test[i];
+                  if (temp.checked==true) {
+                    high = temp.value === "full_high_level"; 
+                    return temp.value;
                   };
               };
           };    
@@ -227,7 +225,6 @@
       };
 
       function onOpen(evt) { 
-          showScreen('<span style="color: green;">Connected ...</span>'); 
           $("#connected").fadeIn('slow');
           $("#content").fadeIn('slow');
       };  
@@ -237,8 +234,6 @@
       };  
 
       function onMessage(evt) { 
-         // showScreen('<span style="color: blue;">' + evt.data+ '</span>'); 
-       console.log("Data revieved by onMessage in html_ws_client");
        if (high){
 		 parseInput(evt.data);
        } else {
@@ -268,11 +263,7 @@
     <div id="visualisation">
       <form name="input">
         <p> Please select the feature you would like to visualise:<p>
-          <input type="radio" name="feature" value="rq" CHECKED>Run-queue length<br>
-          <input type="radio" name="feature" value="migration">Process migration <br>
-          <input type="radio" name="feature" value="rq_migration">Run-queue length and process migration<br>
-          <input type="radio" name="feature" value="inter_node">Inter-node communication <br>
-          <input type="radio" name="feature" value="s_group">S_group operations<br>
+          <input type="radio" name="feature" value="rq_migration" CHECKED>Low level visualisation<br>
 	  <input type="radio" name="feature" value="full_high_level">High level visualisation<br>
         <p> Please select the node(s) you would like to monitor:<p>
           <select id="nodeList"  size=5 style="width: 150px;" multiple>
@@ -288,15 +279,10 @@
           Start index: <input type='text' id="startindex" value="1" size=2>
           End index: <input type='text' id="endindex" value="1" size=2>
           Domain: <input type='text' id="domain" value="@127.0.0.1" size=10> <br><br>
-          <input type='text' id="server" value="ws://localhost:8080/websocket">
           <button type="button" onclick="toggle_connection(this.form)">Start/Stop Visualization</button>
       </form>
     </div>
     <div id="content">						
-      <button id="clear" onclick="clearScreen()" >Clear text</button>
-      <div id=hostId>
-	Host: 
-      </div>
       <div id="output"></div>
       <div id="connection_status"></div>
     </div>

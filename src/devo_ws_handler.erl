@@ -37,9 +37,6 @@ websocket_handle({text, <<"start">>}, Req, State) ->
 websocket_handle({text, Msg}, Req, State) ->
     MsgStr=binary_to_list(Msg), 
     case string:tokens(MsgStr, ":") of
-        ["EULERTEXT",EulerText] ->
-            JavaResult = os:cmd("java -jar priv/iCircles.jar \"" ++ EulerText ++ "\""),
-            {reply, {text,JavaResult}, Req, State};
         ["start_profile",Feature, NodeStr] ->
             Nodes= string:tokens(NodeStr, ";"),
             Ns = [list_to_atom(N)||N<-Nodes],
@@ -117,7 +114,6 @@ websocket_info(Info={cpu, _Cpu}, Req, State) ->
     {reply, {text, list_to_binary(rm_whites(InfoStr))}, Req, State};
 websocket_info(Info={s_group_init_config, _Config}, Req, State) ->
     InfoStr=lists:flatten(io_lib:format("~p.", [Info])),
-    io:fwrite("Pure InfoStr: ~w~nString sent to client: ~s~n",[Info,rm_whites(InfoStr)]),
     {reply, {text, list_to_binary(rm_whites(InfoStr))}, Req, State};
 websocket_info(start_profile, Req, State) ->
     erlang:start_timer(1, self(), <<"Online profiling started...!">>),
