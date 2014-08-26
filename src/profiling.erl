@@ -128,6 +128,9 @@ stop_profiling(inter_node, _Nodes) ->
     devo_trace:stop_trace();
 stop_profiling(s_group, _Nodes) ->
     devo_trace:stop_trace();
+stop_profiling(full_high_level, _Nodes)->
+    erlang:start_timer(1, self(), stop_profile),
+    devo_trace:stop_trace();
 stop_profiling(undefined,_) ->
     ok;
 stop_profiling(Cmd, _Nodes) ->

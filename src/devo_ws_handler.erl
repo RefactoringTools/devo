@@ -37,9 +37,6 @@ websocket_handle({text, <<"start">>}, Req, State) ->
 websocket_handle({text, Msg}, Req, State) ->
     MsgStr=binary_to_list(Msg), 
     case string:tokens(MsgStr, ":") of
-        ["EULERTEXT",EulerText] ->
-            JavaResult = os:cmd("java -jar priv/iCircles.jar \"" ++ EulerText ++ "\""),
-            {reply, {text,JavaResult}, Req, State};
         ["start_profile",Feature, NodeStr] ->
             Nodes= string:tokens(NodeStr, ";"),
             Ns = [list_to_atom(N)||N<-Nodes],

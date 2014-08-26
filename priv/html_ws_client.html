@@ -99,25 +99,25 @@
           }
       };
       
-      function wipe_graphs() {
-         console.log("Wiping graphs");
-         if (high) {
-            $("#highLevel").hide();
-            $("#highLevel").html('');
-            profilingStopped();
-         } else {
-            $("#lowLevel").hide();
-         }
-      };
+   function wipe_graphs() {
+      console.log("Wiping graphs");
+      if (high) {
+         $("#highLevel").hide();
+         $("#highLevel").html('');
+         profilingStopped();
+      } else {
+         $("#lowLevel").hide();
+      }
+   };
 
       function findFeatureSelection(feature){
           var test = document.getElementsByName(feature);
           var sizes = test.length;
           for (i=0; i < sizes; i++) {
-                  if (test[i].checked==true) {
-                    high = !(i < 3); //sets which vis type to use
-					          console.log("vis check:", i, high);
-                    return test[i].value;
+		var temp = test[i];
+                  if (temp.checked==true) {
+                    high = temp.value === "full_high_level"; 
+                    return temp.value;
                   };
               };
           };    
