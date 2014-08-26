@@ -63,11 +63,11 @@
           wsHost = 'ws://localhost:8080/websocket';
           websocket = new WebSocket(wsHost);
           
-          //showScreen('<b>Connecting to: ' +  wsHost + '</b>'); 
           websocket.onopen = function(evt) { onOpen(evt) }; 
           websocket.onclose = function(evt) { onClose(evt) }; 
           websocket.onmessage = function(evt) { onMessage(evt) }; 
-          websocket.onerror = function(evt) { onError(evt) }; 
+          websocket.onerror = function(evt) { onError(evt) };
+      showScreen('<span style="color: orange;">Ready ...</span>'); 
       };  
       
       function disconnect() {
@@ -97,6 +97,7 @@
           } else {
             $("#lowLevel").show();
           }
+          showScreen('<span style="color: green;">Running ...</span>');
       };
       
    function wipe_graphs() {
@@ -224,7 +225,6 @@
       };
 
       function onOpen(evt) { 
-          showScreen('<span style="color: green;">Connected ...</span>'); 
           $("#connected").fadeIn('slow');
           $("#content").fadeIn('slow');
       };  
