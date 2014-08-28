@@ -103,7 +103,8 @@ function isNodeEdge(node1,node2,edge){
 }
 
 function edgeContainsNode(node,edge){
-   return edge.source === node || edge.target === node;
+    var res = (edge.source === node) || (edge.target === node);
+    return res;
 }
 function Time(time){
 	this.time = time;
@@ -266,6 +267,10 @@ function twoCirclesIntersect(c1, c2){
 	var distance = Math.sqrt( Math.pow(c1.x - c2.x, 2) + Math.pow(c1.y - c2.y,2) );
 	//console.log("comparing", c1, c2, c1.r, c2.r, distance, distance <= c1.r + c2.r);
 	return (distance <= c1.r + c2.r);
+}
+
+function pushAll(arr1, arr2){
+    arr2.forEach(function (e){arr1.push(e);});
 }
 
 /**
