@@ -5,19 +5,19 @@ var groupMap = new Array();
 var colorIterator = 0;
 var gradientIdIterator = 0;
 var force;
-var d3Nodes = new Array();
-var d3Edges = new Array();
+var d3Nodes = [];
+var d3Edges = [];
 var groups = new Array();
 var link,node;
 function drawForceGraph(ns,es){
-    d3Nodes = ns;
-    d3Edges = es;
-    force = d3.layout.force()
-	.nodes(d3Nodes)
-	.links(d3Edges)
+     force = d3.layout.force()
 	.size([width,height])
-	.linkDistance([100])
-	.charge([-1000]);
+	.linkDistance(100)
+	.charge( -1000);
+    d3Nodes = force.nodes();
+    d3Edges = force.links();
+    pushAll(d3Nodes, ns);
+    pushAll(d3Edges, es);
     force.on("tick", tickFunction);
     svg = d3.select("#highLevel").append("svg")
 	.attr("width",width)
@@ -28,7 +28,17 @@ function drawForceGraph(ns,es){
 }
 
 function refreshForceGraph(){
-    link = link.data(d3Edges, function(l){return l.source.name + "-" + l.target.name;});
+    node = node.data(force.nodes(), function(n){return n.name;});
+    node
+	.enter()
+	.append("circle")
+	.attr("class",function(d) {return "node " + d.name;})
+	.attr("r",20)
+	.call(force.drag)
+        .append("title").text(function(d){ return d.name;});
+    node.exit().remove();
+
+    link = link.data(force.links(), function(l){return l.source.name + "-" + l.target.name;});
     link
 	.enter()
 	.insert("line", ".node")
@@ -39,16 +49,6 @@ function refreshForceGraph(){
 	.style("stroke-width",6)
         .append("title").text("Total messages= 0, total size = 0");
     link.exit().remove();
-
-    node = node.data(d3Nodes, function(n){return n.name;});
-    node
-	.enter()
-	.append("circle")
-	.attr("class",function(d) {return "node " + d.name;})
-	.attr("r",20)
-	.call(force.drag)
-        .append("title").text(function(d){ return d.name;});
-    node.exit().remove();
     d3.selectAll(".node").style("fill", fillCircle);
     force.start();
 }
@@ -191,14 +191,22 @@ function removeNodes(nodes) {
 	    }
 	}
     }
+    d3Edges = force.links();
 }
 
 function removeEdges(node){
-    //svg.selectAll('line[source="'+node.name+'"]').remove();
-    //svg.selectAll('line[target="'+node.name+'"]').remove();
-    d3Edges = d3Edges.filter(function (e){
+    var save = [];
+    for(var i = 0; i <d3Edges.length; i++){
+	var e = d3Edges[i];
+	if(!edgeContainsNode(node,e)){
+	    save.push(e);
+	}
+    }
+    force.links(save);
+    d3Edges = force.links();
+    /*force.links(d3Edges.filter(function (e){
 	return !edgeContainsNode(node,e);
-    });
+    }));*/
 }
 
 function removeNodesAndEdges(nodes, edges){
