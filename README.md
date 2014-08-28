@@ -50,6 +50,8 @@ now if you look at your web-browser you should see the visualisation.
 
 ###High Level Visualisation
 
+**You must have SD Erlang installed to run the high level visualisation**
+
 First, if you just ran the low level example kill the 'node1' repl. In a terminal that is in the 'devo/tests' directory run
 
 ```
