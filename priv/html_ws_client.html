@@ -61,7 +61,7 @@
       function connect()
       {
           hostname = location.hostname;
-          wsHost = hostname ++ '/websocket';
+          var wsHost = "ws://".concat(hostname,':',location.port,'/websocket');
           websocket = new WebSocket(wsHost);
           
           websocket.onopen = function(evt) { onOpen(evt) }; 
