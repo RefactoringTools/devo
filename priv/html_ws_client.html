@@ -60,7 +60,8 @@
 
       function connect()
       {
-          wsHost = 'ws://localhost:8080/websocket';
+          hostname = location.hostname;
+          var wsHost = "ws://".concat(hostname,':',location.port,'/websocket');
           websocket = new WebSocket(wsHost);
           
           websocket.onopen = function(evt) { onOpen(evt) }; 
